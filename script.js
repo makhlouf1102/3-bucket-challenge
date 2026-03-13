@@ -127,6 +127,7 @@ function bindEvents() {
   elements.cancelEdit.addEventListener('click', resetInterestForm);
   elements.resetButton.addEventListener('click', handleReset);
   elements.interestList.addEventListener('click', handleInterestListClick);
+  elements.bucketResults.addEventListener('click', handleBucketResultsClick);
 }
 
 function handleFreeHoursChange() {
@@ -202,6 +203,17 @@ function handleInterestListClick(event) {
   }
 }
 
+function handleBucketResultsClick(event) {
+  const toggle = event.target.closest('button[data-bucket-toggle]');
+  if (!toggle) {
+    return;
+  }
+
+  const bucketId = toggle.dataset.bucketToggle;
+  uiState.expandedBucketId = uiState.expandedBucketId === bucketId ? '' : bucketId;
+  render();
+}
+
 function handleEditInterest(interestId) {
   const interest = state.interests.find((item) => item.id === interestId);
   if (!interest) {
@@ -244,6 +256,7 @@ function handleReset() {
   state.interests = [];
   uiState.lastChangedInterestId = '';
   uiState.lastDeletedInterestId = '';
+  uiState.expandedBucketId = '';
   localStorage.removeItem(STORAGE_KEY);
   resetInterestForm();
   syncInputsFromState();
@@ -511,7 +524,9 @@ function buildBucketCard(bucket) {
     '<div class="bucket-meta-item"><span class="bucket-meta-label">Share</span><strong data-role="share"></strong></div>',
     '<div class="bucket-meta-item"><span class="bucket-meta-label">Interests</span><strong data-role="count"></strong></div>',
     '</div>',
-    '<p class="bucket-status"></p>'
+    '<p class="bucket-status"></p>',
+    `<button type="button" class="bucket-toggle button-ghost" data-bucket-toggle="${bucket.id}" aria-expanded="false" aria-controls="bucket-details-${bucket.id}">Show bucket split</button>`,
+    `<div id="bucket-details-${bucket.id}" class="bucket-detail-list"></div>`
   ].join('');
   updateBucketCard(article, bucket, getPercentageTotal());
   settleAnimationClass(article, 'is-entering');
@@ -519,14 +534,48 @@ function buildBucketCard(bucket) {
 }
 
 function updateBucketCard(article, bucket, percentageTotal) {
+  const isExpanded = uiState.expandedBucketId === bucket.id;
   article.querySelector('.kicker').textContent = bucket.label;
   article.querySelector('h3').textContent = bucket.name;
   animateNumber(article.querySelector('[data-role="hours"]'), bucket.hours, formatHours);
   article.querySelector('[data-role="share"]').textContent = `${formatNumber(bucket.percentage)}%`;
   article.querySelector('[data-role="count"]').textContent = String(bucket.interests.length);
   article.querySelector('.bucket-status').textContent = getBucketStatus(bucket, percentageTotal);
+  const toggle = article.querySelector('[data-bucket-toggle]');
+  toggle.setAttribute('aria-expanded', String(isExpanded));
+  toggle.textContent = isExpanded ? 'Hide bucket split' : 'Show bucket split';
+  article.classList.toggle('is-expanded', isExpanded);
+  renderBucketDetails(article.querySelector('.bucket-detail-list'), bucket, percentageTotal);
   article.classList.add('is-updating');
   settleAnimationClass(article, 'is-updating');
+}
+
+function renderBucketDetails(container, bucket, percentageTotal) {
+  if (percentageTotal !== 100) {
+    container.innerHTML = '<p class="bucket-detail-empty">Finish the 100% split to inspect bucket details.</p>';
+    return;
+  }
+
+  if (!bucket.allocations.length) {
+    container.innerHTML = '<p class="bucket-detail-empty">No interests assigned to this bucket yet.</p>';
+    return;
+  }
+
+  const totalHours = bucket.hours || 1;
+  container.replaceChildren(...bucket.allocations.map((item) => {
+    const row = document.createElement('div');
+    const share = bucket.hours === 0 ? 0 : (item.hours / totalHours) * 100;
+    row.className = 'bucket-detail-item';
+    row.innerHTML = [
+      '<div class="bucket-detail-head">',
+      `<span class="bucket-detail-name">${escapeHtml(item.name)}</span>`,
+      `<span class="bucket-detail-meta">${formatHours(item.hours)} · ${formatNumber(share)}%</span>`,
+      '</div>',
+      '<div class="bucket-detail-bar"><div class="bucket-detail-fill"></div></div>'
+    ].join('');
+    row.querySelector('.bucket-detail-fill').style.transform = `scaleX(${Math.max(share, 0) / 100})`;
+    return row;
+  }));
 }
 
 function renderAllocationList(model) {
@@ -789,4 +838,13 @@ function getBucketName(bucketId) {
 
 function createId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }

@@ -177,7 +177,9 @@ body::before {
 .data-table th,
 .kicker,
 .bucket-meta-label,
-.preview-label {
+.preview-label,
+.bucket-toggle,
+.bucket-detail-name {
   letter-spacing: 0.01em;
 }
 
@@ -443,7 +445,7 @@ button.secondary {
   border-radius: 24px;
   background: var(--surface-strong);
   box-shadow: var(--shadow-soft);
-  transition: transform var(--motion-medium) var(--ease-out), box-shadow var(--motion-medium) var(--ease-out), border-color var(--motion-medium) var(--ease-out), opacity var(--motion-medium) var(--ease-out);
+  transition: transform var(--motion-medium) var(--ease-out), box-shadow var(--motion-medium) var(--ease-out), border-color var(--motion-medium) var(--ease-out), opacity var(--motion-medium) var(--ease-out), min-height var(--motion-medium) var(--ease-out);
 }
 
 .bucket-card::before {
@@ -473,6 +475,10 @@ button.secondary {
 .bucket-card.is-updating {
   transform: translateY(-4px) scale(1.01);
   box-shadow: 0 16px 36px rgba(73, 49, 23, 0.14);
+}
+
+.bucket-card.is-expanded {
+  box-shadow: 0 18px 38px rgba(73, 49, 23, 0.16);
 }
 
 .kicker {
@@ -515,9 +521,78 @@ button.secondary {
 }
 
 .bucket-status {
-  margin-top: auto;
-  padding-top: 6px;
   color: var(--muted);
+}
+
+.bucket-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(92, 77, 57, 0.14);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--text);
+  box-shadow: none;
+}
+
+.bucket-toggle::after {
+  content: "+";
+  font-size: 1.15rem;
+}
+
+.bucket-toggle[aria-expanded="true"]::after {
+  content: "-";
+}
+
+.bucket-detail-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.bucket-card:not(.is-expanded) .bucket-detail-list {
+  display: none;
+}
+
+.bucket-detail-empty {
+  color: var(--muted);
+}
+
+.bucket-detail-item {
+  display: grid;
+  gap: 6px;
+}
+
+.bucket-detail-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bucket-detail-name {
+  font-weight: 700;
+}
+
+.bucket-detail-meta {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.bucket-detail-bar {
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(92, 77, 57, 0.12);
+}
+
+.bucket-detail-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(23, 76, 60, 0.9), rgba(23, 76, 60, 0.35));
+  transform-origin: left center;
 }
 
 .table-wrap {
@@ -593,9 +668,7 @@ button.secondary {
   color: var(--muted);
 }
 
-.summary-line,
-.bucket-detail-list,
-.bucket-toggle {
+.summary-line {
   display: none;
 }
 
