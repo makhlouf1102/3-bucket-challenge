@@ -41,6 +41,7 @@ const elements = {
   interestMessage: document.getElementById('interest-message'),
   interestPreview: document.getElementById('interest-preview'),
   interestList: document.getElementById('interest-list'),
+  allocationSummary: document.getElementById('allocation-summary'),
   allocationList: document.getElementById('allocation-list'),
   bucketResults: document.getElementById('bucket-results'),
   cancelEdit: document.getElementById('cancel-edit'),
@@ -257,10 +258,11 @@ function handleReset() {
   uiState.lastChangedInterestId = '';
   uiState.lastDeletedInterestId = '';
   uiState.expandedBucketId = '';
+  uiState.summaryText = '';
   localStorage.removeItem(STORAGE_KEY);
   resetInterestForm();
   syncInputsFromState();
-  setMessage(elements.interestMessage, '', false);
+  setMessage(elements.interestMessage, 'All planner data cleared.', false);
   render();
 }
 
@@ -306,7 +308,9 @@ function render() {
   renderInterestList();
   renderBucketResults(allocationModel);
   renderAllocationList(allocationModel);
-  updateSummary(previousAllocations, allocationModel.allocations);
+  updateSummary(previousAllocations, allocationModel.allocations, allocationModel.percentageTotal);
+  renderSummaryLine();
+  highlightChangedRows();
   uiState.previousAllocations = new Map(allocationModel.allocations.map((item) => [item.id, item.hours]));
 }
 
@@ -625,9 +629,20 @@ function updateAllocationRow(row, item) {
   settleAnimationClass(row, 'is-updating');
 }
 
-function updateSummary(previousAllocations, allocations) {
-  if (!previousAllocations.size || !allocations.length) {
-    uiState.summaryText = '';
+function updateSummary(previousAllocations, allocations, percentageTotal) {
+  if (percentageTotal !== 100) {
+    uiState.summaryText = 'Complete the 100% bucket split to unlock the weekly narrative summary.';
+    return;
+  }
+
+  if (!allocations.length) {
+    uiState.summaryText = 'Add an interest to see how your weekly time is distributed.';
+    return;
+  }
+
+  if (!previousAllocations.size) {
+    const top = allocations.reduce((best, current) => (current.hours > best.hours ? current : best), allocations[0]);
+    uiState.summaryText = `${top.name} currently leads your plan at ${formatHours(top.hours)}.`;
     return;
   }
 
@@ -641,12 +656,45 @@ function updateSummary(previousAllocations, allocations) {
   });
 
   if (!strongest || Math.abs(strongest.delta) < 0.01) {
-    uiState.summaryText = '';
+    const top = allocations.reduce((best, current) => (current.hours > best.hours ? current : best), allocations[0]);
+    uiState.summaryText = `${top.name} currently leads your plan at ${formatHours(top.hours)}.`;
     return;
   }
 
   const direction = strongest.delta > 0 ? 'gained' : 'lost';
   uiState.summaryText = `${strongest.item.name} ${direction} ${formatNumber(Math.abs(strongest.delta))} hours this week.`;
+}
+
+function renderSummaryLine() {
+  if (!uiState.summaryText) {
+    elements.allocationSummary.hidden = true;
+    elements.allocationSummary.textContent = '';
+    return;
+  }
+
+  elements.allocationSummary.hidden = false;
+  elements.allocationSummary.textContent = uiState.summaryText;
+}
+
+function highlightChangedRows() {
+  if (!uiState.lastChangedInterestId) {
+    return;
+  }
+
+  const targets = document.querySelectorAll(`[data-key="${uiState.lastChangedInterestId}"]`);
+  if (!targets.length) {
+    uiState.lastChangedInterestId = '';
+    return;
+  }
+
+  targets.forEach((target) => {
+    target.classList.add('is-highlighted');
+    window.setTimeout(() => target.classList.remove('is-highlighted'), uiState.reducedMotion ? 0 : 1200);
+  });
+
+  const behavior = uiState.reducedMotion ? 'auto' : 'smooth';
+  targets[0].scrollIntoView({ behavior, block: 'nearest' });
+  uiState.lastChangedInterestId = '';
 }
 
 function buildBucketAllocation(bucket, percentageTotal) {
@@ -738,6 +786,7 @@ function syncKeyedChildren({ container, items, getKey, buildNode, updateNode, re
 
     if (removeKey && key === removeKey) {
       node.classList.add('is-exiting');
+      fragment.appendChild(node);
       window.setTimeout(() => node.remove(), uiState.reducedMotion ? 0 : MOTION_MEDIUM_MS);
       return;
     }

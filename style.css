@@ -426,6 +426,21 @@ button.secondary {
   color: var(--muted);
 }
 
+.summary-line {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--text);
+}
+
+.summary-line[hidden] {
+  display: none !important;
+}
+
 .results-grid {
   position: relative;
   z-index: 1;
@@ -652,6 +667,10 @@ button.secondary {
   transform: translateY(-8px);
 }
 
+.data-row.is-highlighted td {
+  background: rgba(232, 247, 239, 0.98);
+}
+
 .row-actions {
   display: flex;
   gap: 8px;
@@ -666,10 +685,6 @@ button.secondary {
 
 .empty-state td {
   color: var(--muted);
-}
-
-.summary-line {
-  display: none;
 }
 
 .sr-only {
