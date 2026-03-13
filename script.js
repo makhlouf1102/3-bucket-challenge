@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'threeBucketPlannerState';
+const MOTION_MEDIUM_MS = 240;
 const BUCKETS = [
   { id: '1', name: 'Bucket 1: Wealth', accentClass: 'bucket-1-card', label: 'Wealth' },
   { id: '2', name: 'Bucket 2: Necessary', accentClass: 'bucket-2-card', label: 'Necessary' },
@@ -6,6 +7,15 @@ const BUCKETS = [
 ];
 
 const state = loadState();
+const uiState = {
+  editingInterestId: '',
+  expandedBucketId: '',
+  lastChangedInterestId: '',
+  lastDeletedInterestId: '',
+  previousAllocations: new Map(),
+  summaryText: '',
+  reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+};
 
 const elements = {
   freeHours: document.getElementById('free-hours'),
@@ -59,9 +69,7 @@ function loadState() {
         '3': parseBucketPercentage(parsed.bucketPercentages?.['3'], defaults.bucketPercentages['3'])
       },
       interests: Array.isArray(parsed.interests)
-        ? parsed.interests
-            .map((interest) => sanitizeInterest(interest))
-            .filter(Boolean)
+        ? parsed.interests.map((interest) => sanitizeInterest(interest)).filter(Boolean)
         : []
     };
   } catch (error) {
@@ -94,7 +102,7 @@ function bindEvents() {
   elements.freeHours.addEventListener('input', handleFreeHoursChange);
 
   Object.entries(elements.bucketInputs).forEach(([bucketId, input]) => {
-    input.addEventListener('input', () => handleBucketPercentageChange(bucketId));
+    input.addEventListener('input', () => handleBucketPercentageChange(bucketId, input.value));
   });
 
   elements.interestForm.addEventListener('submit', handleInterestSubmit);
@@ -109,9 +117,8 @@ function handleFreeHoursChange() {
   render();
 }
 
-function handleBucketPercentageChange(bucketId) {
-  const parsed = parseBucketPercentage(elements.bucketInputs[bucketId].value, state.bucketPercentages[bucketId]);
-  state.bucketPercentages[bucketId] = parsed;
+function handleBucketPercentageChange(bucketId, rawValue) {
+  state.bucketPercentages[bucketId] = parseBucketPercentage(rawValue, state.bucketPercentages[bucketId]);
   saveState();
   render();
 }
@@ -142,13 +149,14 @@ function handleInterestSubmit(event) {
 
   if (existingId) {
     state.interests = state.interests.map((interest) => (
-      interest.id === existingId
-        ? { ...interest, name, bucket, weight }
-        : interest
+      interest.id === existingId ? { ...interest, name, bucket, weight } : interest
     ));
+    uiState.lastChangedInterestId = existingId;
     setMessage(elements.interestMessage, 'Interest updated.', false);
   } else {
-    state.interests.push({ id: createId(), name, bucket, weight });
+    const newId = createId();
+    state.interests.push({ id: newId, name, bucket, weight });
+    uiState.lastChangedInterestId = newId;
     setMessage(elements.interestMessage, 'Interest added.', false);
   }
 
@@ -181,6 +189,7 @@ function handleEditInterest(interestId) {
     return;
   }
 
+  uiState.editingInterestId = interest.id;
   elements.interestId.value = interest.id;
   elements.interestName.value = interest.name;
   elements.interestBucket.value = interest.bucket;
@@ -191,6 +200,7 @@ function handleEditInterest(interestId) {
 }
 
 function handleDeleteInterest(interestId) {
+  uiState.lastDeletedInterestId = interestId;
   state.interests = state.interests.filter((interest) => interest.id !== interestId);
   saveState();
 
@@ -211,6 +221,8 @@ function handleReset() {
   state.freeHours = 0;
   state.bucketPercentages = { '1': 80, '2': 15, '3': 5 };
   state.interests = [];
+  uiState.lastChangedInterestId = '';
+  uiState.lastDeletedInterestId = '';
   localStorage.removeItem(STORAGE_KEY);
   resetInterestForm();
   syncInputsFromState();
@@ -219,6 +231,7 @@ function handleReset() {
 }
 
 function resetInterestForm() {
+  uiState.editingInterestId = '';
   elements.interestForm.reset();
   elements.interestId.value = '';
   elements.interestBucket.value = '1';
@@ -236,13 +249,24 @@ function syncInputsFromState() {
 }
 
 function render() {
-  renderPercentageMessage();
+  const previousAllocations = uiState.previousAllocations;
+  const allocationModel = buildAllocationModel();
+  renderPercentageMessage(allocationModel.percentageTotal);
   renderInterestList();
-  renderResults();
+  renderBucketResults(allocationModel);
+  renderAllocationList(allocationModel);
+  updateSummary(previousAllocations, allocationModel.allocations);
+  uiState.previousAllocations = new Map(allocationModel.allocations.map((item) => [item.id, item.hours]));
 }
 
-function renderPercentageMessage() {
-  const total = getPercentageTotal();
+function buildAllocationModel() {
+  const percentageTotal = getPercentageTotal();
+  const bucketAllocations = BUCKETS.map((bucket) => buildBucketAllocation(bucket, percentageTotal));
+  const allocations = bucketAllocations.flatMap((bucket) => bucket.allocations);
+  return { percentageTotal, bucketAllocations, allocations };
+}
+
+function renderPercentageMessage(total) {
   if (total === 100) {
     setMessage(elements.percentageMessage, '100% allocated across all three buckets.', false);
     return;
@@ -257,76 +281,162 @@ function renderInterestList() {
     return;
   }
 
-  elements.interestList.innerHTML = state.interests
-    .map((interest) => `
-      <tr>
-        <td data-label="Interest">${escapeHtml(interest.name)}</td>
-        <td data-label="Bucket">${escapeHtml(getBucketName(interest.bucket))}</td>
-        <td data-label="Weight">${formatNumber(interest.weight)}</td>
-        <td data-label="Actions">
-          <div class="row-actions">
-            <button type="button" class="button" data-action="edit" data-id="${interest.id}">Edit</button>
-            <button type="button" class="button button-ghost button-danger" data-action="delete" data-id="${interest.id}">Delete</button>
-          </div>
-        </td>
-      </tr>
-    `)
-    .join('');
+  syncRows({
+    tbody: elements.interestList,
+    items: state.interests,
+    getKey: (interest) => interest.id,
+    buildRow: buildInterestRow,
+    updateRow: updateInterestRow,
+    emptyMarkup: '<tr class="empty-state"><td colspan="4">No interests added yet.</td></tr>',
+    removeKey: uiState.lastDeletedInterestId
+  });
+
+  uiState.lastDeletedInterestId = '';
 }
 
-function renderResults() {
-  const percentageTotal = getPercentageTotal();
-  const bucketAllocations = BUCKETS.map((bucket) => buildBucketAllocation(bucket));
+function buildInterestRow(interest) {
+  const row = document.createElement('tr');
+  row.className = 'data-row is-entering';
+  row.dataset.key = interest.id;
+  row.innerHTML = [
+    '<td data-label="Interest"></td>',
+    '<td data-label="Bucket"></td>',
+    '<td data-label="Weight"></td>',
+    '<td data-label="Actions"><div class="row-actions">',
+    `<button type="button" class="button" data-action="edit" data-id="${interest.id}">Edit</button>`,
+    `<button type="button" class="button button-ghost button-danger" data-action="delete" data-id="${interest.id}">Delete</button>`,
+    '</div></td>'
+  ].join('');
+  updateInterestRow(row, interest);
+  settleAnimationClass(row, 'is-entering');
+  return row;
+}
 
-  elements.bucketResults.innerHTML = bucketAllocations
-    .map((bucket) => `
-      <article class="bucket-card ${bucket.accentClass}">
-        <div class="kicker">${escapeHtml(bucket.label)}</div>
-        <h3>${escapeHtml(bucket.name)}</h3>
-        <div class="bucket-hours"><strong>${formatHours(bucket.hours)}</strong></div>
-        <div class="bucket-meta">
-          <div class="bucket-meta-item">
-            <span class="bucket-meta-label">Share</span>
-            <strong>${formatNumber(bucket.percentage)}%</strong>
-          </div>
-          <div class="bucket-meta-item">
-            <span class="bucket-meta-label">Interests</span>
-            <strong>${bucket.interests.length}</strong>
-          </div>
-        </div>
-        <p class="bucket-status">${escapeHtml(getBucketStatus(bucket, percentageTotal))}</p>
-      </article>
-    `)
-    .join('');
+function updateInterestRow(row, interest) {
+  const cells = row.children;
+  cells[0].textContent = interest.name;
+  cells[1].textContent = getBucketName(interest.bucket);
+  cells[2].textContent = formatNumber(interest.weight);
+  row.classList.add('is-updating');
+  settleAnimationClass(row, 'is-updating');
+}
 
+function renderBucketResults(model) {
+  syncKeyedChildren({
+    container: elements.bucketResults,
+    items: model.bucketAllocations,
+    getKey: (bucket) => bucket.id,
+    buildNode: buildBucketCard,
+    updateNode: (node, bucket) => updateBucketCard(node, bucket, model.percentageTotal),
+    removeKey: null
+  });
+}
+
+function buildBucketCard(bucket) {
+  const article = document.createElement('article');
+  article.className = `bucket-card ${bucket.accentClass} is-entering`;
+  article.dataset.key = bucket.id;
+  article.innerHTML = [
+    '<div class="kicker"></div>',
+    '<h3></h3>',
+    '<div class="bucket-hours"><strong data-role="hours"></strong></div>',
+    '<div class="bucket-meta">',
+    '<div class="bucket-meta-item"><span class="bucket-meta-label">Share</span><strong data-role="share"></strong></div>',
+    '<div class="bucket-meta-item"><span class="bucket-meta-label">Interests</span><strong data-role="count"></strong></div>',
+    '</div>',
+    '<p class="bucket-status"></p>'
+  ].join('');
+  updateBucketCard(article, bucket, getPercentageTotal());
+  settleAnimationClass(article, 'is-entering');
+  return article;
+}
+
+function updateBucketCard(article, bucket, percentageTotal) {
+  article.querySelector('.kicker').textContent = bucket.label;
+  article.querySelector('h3').textContent = bucket.name;
+  animateNumber(article.querySelector('[data-role="hours"]'), bucket.hours, formatHours);
+  article.querySelector('[data-role="share"]').textContent = `${formatNumber(bucket.percentage)}%`;
+  article.querySelector('[data-role="count"]').textContent = String(bucket.interests.length);
+  article.querySelector('.bucket-status').textContent = getBucketStatus(bucket, percentageTotal);
+  article.classList.add('is-updating');
+  settleAnimationClass(article, 'is-updating');
+}
+
+function renderAllocationList(model) {
   if (state.interests.length === 0) {
     elements.allocationList.innerHTML = '<tr class="empty-state"><td colspan="4">Add interests to see per-interest hours.</td></tr>';
     return;
   }
 
-  if (percentageTotal !== 100) {
+  if (model.percentageTotal !== 100) {
     elements.allocationList.innerHTML = '<tr class="empty-state"><td colspan="4">Fix the bucket percentages so they total 100% to see allocations.</td></tr>';
     return;
   }
 
-  const allocations = bucketAllocations.flatMap((bucket) => bucket.allocations);
-
-  elements.allocationList.innerHTML = allocations
-    .map((item) => `
-      <tr>
-        <td data-label="Interest">${escapeHtml(item.name)}</td>
-        <td data-label="Bucket">${escapeHtml(getBucketName(item.bucket))}</td>
-        <td data-label="Weight">${formatNumber(item.weight)}</td>
-        <td data-label="Hours per week">${formatHours(item.hours)}</td>
-      </tr>
-    `)
-    .join('');
+  syncRows({
+    tbody: elements.allocationList,
+    items: model.allocations,
+    getKey: (allocation) => allocation.id,
+    buildRow: buildAllocationRow,
+    updateRow: updateAllocationRow,
+    emptyMarkup: '<tr class="empty-state"><td colspan="4">Add interests to see per-interest hours.</td></tr>',
+    removeKey: null
+  });
 }
 
-function buildBucketAllocation(bucket) {
+function buildAllocationRow(item) {
+  const row = document.createElement('tr');
+  row.className = 'data-row is-entering';
+  row.dataset.key = item.id;
+  row.innerHTML = [
+    '<td data-label="Interest"></td>',
+    '<td data-label="Bucket"></td>',
+    '<td data-label="Weight"></td>',
+    '<td data-label="Hours per week" data-role="hours"></td>'
+  ].join('');
+  updateAllocationRow(row, item);
+  settleAnimationClass(row, 'is-entering');
+  return row;
+}
+
+function updateAllocationRow(row, item) {
+  const cells = row.children;
+  cells[0].textContent = item.name;
+  cells[1].textContent = getBucketName(item.bucket);
+  cells[2].textContent = formatNumber(item.weight);
+  animateNumber(cells[3], item.hours, formatHours);
+  row.classList.add('is-updating');
+  settleAnimationClass(row, 'is-updating');
+}
+
+function updateSummary(previousAllocations, allocations) {
+  if (!previousAllocations.size || !allocations.length) {
+    uiState.summaryText = '';
+    return;
+  }
+
+  let strongest = null;
+  allocations.forEach((item) => {
+    const previous = previousAllocations.get(item.id) ?? 0;
+    const delta = item.hours - previous;
+    if (!strongest || Math.abs(delta) > Math.abs(strongest.delta)) {
+      strongest = { item, delta };
+    }
+  });
+
+  if (!strongest || Math.abs(strongest.delta) < 0.01) {
+    uiState.summaryText = '';
+    return;
+  }
+
+  const direction = strongest.delta > 0 ? 'gained' : 'lost';
+  uiState.summaryText = `${strongest.item.name} ${direction} ${formatNumber(Math.abs(strongest.delta))} hours this week.`;
+}
+
+function buildBucketAllocation(bucket, percentageTotal) {
   const percentage = state.bucketPercentages[bucket.id];
   const interests = state.interests.filter((item) => item.bucket === bucket.id);
-  const hours = getPercentageTotal() === 100 ? (state.freeHours * percentage) / 100 : 0;
+  const hours = percentageTotal === 100 ? (state.freeHours * percentage) / 100 : 0;
 
   if (interests.length === 0) {
     return { ...bucket, percentage, hours, interests, allocations: [] };
@@ -376,6 +486,86 @@ function getBucketStatus(bucket, percentageTotal) {
   return 'Assigned and split by weight across your interests.';
 }
 
+function syncRows({ tbody, items, getKey, buildRow, updateRow, emptyMarkup, removeKey }) {
+  if (!items.length) {
+    tbody.innerHTML = emptyMarkup;
+    return;
+  }
+
+  syncKeyedChildren({
+    container: tbody,
+    items,
+    getKey,
+    buildNode: buildRow,
+    updateNode: updateRow,
+    removeKey
+  });
+}
+
+function syncKeyedChildren({ container, items, getKey, buildNode, updateNode, removeKey }) {
+  const existing = new Map(Array.from(container.children).map((child) => [child.dataset.key, child]));
+  const fragment = document.createDocumentFragment();
+  const activeKeys = new Set();
+
+  items.forEach((item) => {
+    const key = getKey(item);
+    activeKeys.add(key);
+    const node = existing.get(key) || buildNode(item);
+    updateNode(node, item);
+    fragment.appendChild(node);
+  });
+
+  Array.from(existing.entries()).forEach(([key, node]) => {
+    if (activeKeys.has(key)) {
+      return;
+    }
+
+    if (removeKey && key === removeKey) {
+      node.classList.add('is-exiting');
+      window.setTimeout(() => node.remove(), uiState.reducedMotion ? 0 : MOTION_MEDIUM_MS);
+      return;
+    }
+
+    node.remove();
+  });
+
+  container.replaceChildren(fragment);
+}
+
+function animateNumber(element, nextValue, formatter) {
+  const previousValue = Number(element.dataset.value || 0);
+  element.dataset.value = String(nextValue);
+
+  if (uiState.reducedMotion) {
+    element.textContent = formatter(nextValue);
+    return;
+  }
+
+  const start = performance.now();
+  const duration = 500;
+  const delta = nextValue - previousValue;
+
+  function frame(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    element.textContent = formatter(previousValue + delta * eased);
+    if (progress < 1) {
+      window.requestAnimationFrame(frame);
+    }
+  }
+
+  window.requestAnimationFrame(frame);
+}
+
+function settleAnimationClass(node, className) {
+  if (uiState.reducedMotion) {
+    node.classList.remove(className);
+    return;
+  }
+
+  window.setTimeout(() => node.classList.remove(className), MOTION_MEDIUM_MS);
+}
+
 function getPercentageTotal() {
   return Object.values(state.bucketPercentages).reduce((sum, value) => sum + value, 0);
 }
@@ -411,6 +601,10 @@ function parsePositiveNumber(value, fallback) {
 function setMessage(element, text, isError) {
   element.textContent = text;
   element.classList.toggle('error', isError);
+  element.classList.remove('message-pop');
+  if (!uiState.reducedMotion && text) {
+    window.requestAnimationFrame(() => element.classList.add('message-pop'));
+  }
 }
 
 function formatNumber(value) {
@@ -428,13 +622,4 @@ function getBucketName(bucketId) {
 
 function createId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }

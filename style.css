@@ -17,6 +17,10 @@
   --bucket-2-soft: rgba(153, 101, 21, 0.12);
   --bucket-3: #8c4d7d;
   --bucket-3-soft: rgba(140, 77, 125, 0.12);
+  --motion-fast: 160ms;
+  --motion-medium: 240ms;
+  --motion-slow: 500ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   font-family: "Aptos", "Segoe UI Variable", "Trebuchet MS", sans-serif;
   line-height: 1.5;
 }
@@ -100,6 +104,7 @@ body::before {
   background: var(--surface);
   backdrop-filter: blur(18px);
   box-shadow: var(--shadow-soft);
+  animation: fade-up var(--motion-medium) var(--ease-out) both;
 }
 
 .panel::after {
@@ -201,7 +206,7 @@ select {
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.9);
   color: var(--text);
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, transform var(--motion-fast) ease;
 }
 
 input:hover,
@@ -227,7 +232,7 @@ button {
   color: #fff;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease, color 160ms ease;
+  transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease;
 }
 
 .button:hover,
@@ -266,6 +271,12 @@ button.secondary {
   padding: 14px;
   border: 1px solid transparent;
   border-radius: 20px;
+  transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, border-color var(--motion-fast) ease;
+}
+
+.bucket-field:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(73, 49, 23, 0.08);
 }
 
 .bucket-1 {
@@ -293,11 +304,16 @@ button.secondary {
   background: rgba(23, 107, 52, 0.1);
   color: #176b34;
   font-size: 0.94rem;
+  transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) ease;
 }
 
 .message.error {
   background: rgba(180, 35, 24, 0.1);
   color: #b42318;
+}
+
+.message.message-pop {
+  animation: pulse-pop var(--motion-medium) var(--ease-out);
 }
 
 .results-grid {
@@ -319,6 +335,7 @@ button.secondary {
   border-radius: 24px;
   background: var(--surface-strong);
   box-shadow: var(--shadow-soft);
+  transition: transform var(--motion-medium) var(--ease-out), box-shadow var(--motion-medium) var(--ease-out), border-color var(--motion-medium) var(--ease-out), opacity var(--motion-medium) var(--ease-out);
 }
 
 .bucket-card::before {
@@ -343,6 +360,11 @@ button.secondary {
 .bucket-card.bucket-3-card {
   background: linear-gradient(180deg, rgba(140, 77, 125, 0.15), rgba(255, 253, 248, 0.95));
   border-color: rgba(140, 77, 125, 0.18);
+}
+
+.bucket-card.is-updating {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 16px 36px rgba(73, 49, 23, 0.14);
 }
 
 .kicker {
@@ -415,6 +437,7 @@ button.secondary {
   border-top: 1px solid rgba(92, 77, 57, 0.12);
   border-bottom: 1px solid rgba(92, 77, 57, 0.12);
   vertical-align: top;
+  transition: background var(--motion-fast) ease, transform var(--motion-fast) ease, opacity var(--motion-fast) ease;
 }
 
 .data-table td:first-child {
@@ -427,6 +450,23 @@ button.secondary {
   border-right: 1px solid rgba(92, 77, 57, 0.12);
   border-top-right-radius: 16px;
   border-bottom-right-radius: 16px;
+}
+
+.data-row {
+  transition: transform var(--motion-medium) var(--ease-out), opacity var(--motion-medium) var(--ease-out);
+}
+
+.data-row.is-entering {
+  animation: fade-up var(--motion-medium) var(--ease-out);
+}
+
+.data-row.is-updating td {
+  background: rgba(255, 250, 236, 0.96);
+}
+
+.data-row.is-exiting {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 .row-actions {
@@ -445,6 +485,15 @@ button.secondary {
   color: var(--muted);
 }
 
+.preview-card,
+.summary-line,
+.allocation-progress,
+.bucket-detail-list,
+.bucket-control,
+.bucket-toggle {
+  display: none;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -459,6 +508,32 @@ button.secondary {
 
 [hidden] {
   display: none !important;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 @media (max-width: 900px) {
@@ -566,5 +641,19 @@ button.secondary {
 
   .bucket-card {
     min-height: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0ms !important;
+    scroll-behavior: auto !important;
   }
 }
