@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Three Bucket Planner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page">
+    <header class="intro">
+      <h1>Three Bucket Planner</h1>
+      <p>Organize your weekly free time into wealth, necessary, and pure interest buckets.</p>
+    </header>
+
+    <section class="panel" aria-labelledby="setup-heading">
+      <h2 id="setup-heading">Weekly Setup</h2>
+      <div class="field-grid">
+        <label class="field">
+          <span>Weekly free hours</span>
+          <input id="free-hours" type="number" min="0" step="0.5" value="0">
+        </label>
+      </div>
+
+      <div class="percentages">
+        <h3>Bucket percentages</h3>
+        <div class="field-grid">
+          <label class="field">
+            <span>Bucket 1: Wealth</span>
+            <input id="bucket-1" type="number" min="0" max="100" step="1" value="80">
+          </label>
+          <label class="field">
+            <span>Bucket 2: Necessary</span>
+            <input id="bucket-2" type="number" min="0" max="100" step="1" value="15">
+          </label>
+          <label class="field">
+            <span>Bucket 3: Pure interest</span>
+            <input id="bucket-3" type="number" min="0" max="100" step="1" value="5">
+          </label>
+        </div>
+        <p id="percentage-message" class="message" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="interests-heading">
+      <div class="section-head">
+        <h2 id="interests-heading">Interests</h2>
+        <button id="reset-button" type="button" class="secondary">Reset all data</button>
+      </div>
+
+      <form id="interest-form" class="interest-form">
+        <input id="interest-id" type="hidden">
+        <div class="field-grid">
+          <label class="field">
+            <span>Interest name</span>
+            <input id="interest-name" type="text" maxlength="80" placeholder="Example: Learning sales">
+          </label>
+          <label class="field">
+            <span>Bucket</span>
+            <select id="interest-bucket">
+              <option value="1">Bucket 1: Wealth</option>
+              <option value="2">Bucket 2: Necessary</option>
+              <option value="3">Bucket 3: Pure interest</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Weight</span>
+            <input id="interest-weight" type="number" min="0.1" step="0.1" value="1">
+          </label>
+        </div>
+        <div class="actions">
+          <button id="save-interest" type="submit">Save interest</button>
+          <button id="cancel-edit" type="button" class="secondary" hidden>Cancel edit</button>
+        </div>
+        <p id="interest-message" class="message" aria-live="polite"></p>
+      </form>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Interest</th>
+              <th scope="col">Bucket</th>
+              <th scope="col">Weight</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="interest-list">
+            <tr>
+              <td colspan="4">No interests added yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="results-heading">
+      <h2 id="results-heading">Weekly Allocation</h2>
+      <div id="bucket-results" class="results-grid"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Interest</th>
+              <th scope="col">Bucket</th>
+              <th scope="col">Weight</th>
+              <th scope="col">Hours per week</th>
+            </tr>
+          </thead>
+          <tbody id="allocation-list">
+            <tr>
+              <td colspan="4">Add interests to see per-interest hours.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
