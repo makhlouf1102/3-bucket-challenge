@@ -3,18 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Plan your weekly free time across wealth, necessary, and pure-interest buckets with weighted allocations.">
   <title>Three Bucket Planner</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="page">
     <header class="intro">
+      <p class="eyebrow">Weekly time planning</p>
       <h1>Three Bucket Planner</h1>
-      <p>Organize your weekly free time into wealth, necessary, and pure interest buckets.</p>
+      <p class="lede">Organize your weekly free hours into three buckets, then split each bucket across your current interests by priority.</p>
     </header>
 
     <section class="panel" aria-labelledby="setup-heading">
-      <h2 id="setup-heading">Weekly Setup</h2>
+      <div class="section-copy">
+        <h2 id="setup-heading">Weekly Setup</h2>
+        <p>Set your available time and decide how much of it should go to each bucket.</p>
+      </div>
       <div class="field-grid">
         <label class="field">
           <span>Weekly free hours</span>
@@ -23,17 +28,20 @@
       </div>
 
       <div class="percentages">
-        <h3>Bucket percentages</h3>
-        <div class="field-grid">
-          <label class="field">
+        <div class="subsection-copy">
+          <h3>Bucket percentages</h3>
+          <p>All three buckets should total 100% of your weekly free time.</p>
+        </div>
+        <div class="field-grid field-grid-buckets">
+          <label class="field bucket-field bucket-1">
             <span>Bucket 1: Wealth</span>
             <input id="bucket-1" type="number" min="0" max="100" step="1" value="80">
           </label>
-          <label class="field">
+          <label class="field bucket-field bucket-2">
             <span>Bucket 2: Necessary</span>
             <input id="bucket-2" type="number" min="0" max="100" step="1" value="15">
           </label>
-          <label class="field">
+          <label class="field bucket-field bucket-3">
             <span>Bucket 3: Pure interest</span>
             <input id="bucket-3" type="number" min="0" max="100" step="1" value="5">
           </label>
@@ -44,8 +52,11 @@
 
     <section class="panel" aria-labelledby="interests-heading">
       <div class="section-head">
-        <h2 id="interests-heading">Interests</h2>
-        <button id="reset-button" type="button" class="secondary">Reset all data</button>
+        <div class="section-copy">
+          <h2 id="interests-heading">Interests</h2>
+          <p>Add the things you want to spend time on, then assign a weight to show relative importance inside each bucket.</p>
+        </div>
+        <button id="reset-button" type="button" class="button button-ghost button-danger">Reset all data</button>
       </div>
 
       <form id="interest-form" class="interest-form">
@@ -66,17 +77,19 @@
           <label class="field">
             <span>Weight</span>
             <input id="interest-weight" type="number" min="0.1" step="0.1" value="1">
+            <small>Higher weight means this interest gets a larger share of its bucket.</small>
           </label>
         </div>
         <div class="actions">
-          <button id="save-interest" type="submit">Save interest</button>
-          <button id="cancel-edit" type="button" class="secondary" hidden>Cancel edit</button>
+          <button id="save-interest" type="submit" class="button">Save interest</button>
+          <button id="cancel-edit" type="button" class="button button-ghost" hidden>Cancel edit</button>
         </div>
         <p id="interest-message" class="message" aria-live="polite"></p>
       </form>
 
       <div class="table-wrap">
-        <table>
+        <table class="data-table">
+          <caption class="sr-only">Current interests and their assigned buckets</caption>
           <thead>
             <tr>
               <th scope="col">Interest</th>
@@ -94,12 +107,16 @@
       </div>
     </section>
 
-    <section class="panel" aria-labelledby="results-heading">
-      <h2 id="results-heading">Weekly Allocation</h2>
+    <section class="panel panel-results" aria-labelledby="results-heading">
+      <div class="section-copy">
+        <h2 id="results-heading">Weekly Allocation</h2>
+        <p>Your bucket summary is shown first, followed by the exact hours assigned to each interest.</p>
+      </div>
       <div id="bucket-results" class="results-grid"></div>
 
       <div class="table-wrap">
-        <table>
+        <table class="data-table">
+          <caption class="sr-only">Per-interest weekly allocation</caption>
           <thead>
             <tr>
               <th scope="col">Interest</th>
