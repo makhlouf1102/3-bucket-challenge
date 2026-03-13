@@ -176,7 +176,8 @@ body::before {
 .field small,
 .data-table th,
 .kicker,
-.bucket-meta-label {
+.bucket-meta-label,
+.preview-label {
   letter-spacing: 0.01em;
 }
 
@@ -271,6 +272,19 @@ button.secondary {
 .percentages,
 .interest-form {
   margin-top: 16px;
+}
+
+.interest-form {
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.34);
+  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, background var(--motion-fast) ease, transform var(--motion-fast) ease;
+}
+
+.interest-form.is-editing {
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 14px 32px rgba(73, 49, 23, 0.09);
+  transform: translateY(-2px);
 }
 
 .allocation-progress {
@@ -377,6 +391,37 @@ button.secondary {
 
 .message.message-pop {
   animation: pulse-pop var(--motion-medium) var(--ease-out);
+}
+
+.preview-card {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(23, 76, 60, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  animation: fade-up var(--motion-medium) var(--ease-out);
+}
+
+.preview-card.error {
+  border-color: rgba(156, 61, 39, 0.18);
+}
+
+.preview-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.preview-hours {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.preview-meta {
+  color: var(--muted);
 }
 
 .results-grid {
@@ -548,7 +593,6 @@ button.secondary {
   color: var(--muted);
 }
 
-.preview-card,
 .summary-line,
 .bucket-detail-list,
 .bucket-toggle {

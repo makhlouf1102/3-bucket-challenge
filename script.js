@@ -39,6 +39,7 @@ const elements = {
   interestBucket: document.getElementById('interest-bucket'),
   interestWeight: document.getElementById('interest-weight'),
   interestMessage: document.getElementById('interest-message'),
+  interestPreview: document.getElementById('interest-preview'),
   interestList: document.getElementById('interest-list'),
   allocationList: document.getElementById('allocation-list'),
   bucketResults: document.getElementById('bucket-results'),
@@ -115,6 +116,11 @@ function bindEvents() {
 
   Object.entries(elements.bucketRanges).forEach(([bucketId, input]) => {
     input.addEventListener('input', () => handleBucketPercentageChange(bucketId, input.value));
+  });
+
+  [elements.interestName, elements.interestBucket, elements.interestWeight].forEach((element) => {
+    element.addEventListener('input', renderInterestPreview);
+    element.addEventListener('change', renderInterestPreview);
   });
 
   elements.interestForm.addEventListener('submit', handleInterestSubmit);
@@ -210,6 +216,8 @@ function handleEditInterest(interestId) {
   elements.saveInterest.textContent = 'Update interest';
   elements.cancelEdit.hidden = false;
   setMessage(elements.interestMessage, 'Editing interest.', false);
+  focusInterestForm();
+  renderInterestPreview();
 }
 
 function handleDeleteInterest(interestId) {
@@ -251,6 +259,17 @@ function resetInterestForm() {
   elements.interestWeight.value = '1';
   elements.saveInterest.textContent = 'Save interest';
   elements.cancelEdit.hidden = true;
+  elements.interestForm.classList.remove('is-editing');
+  elements.interestPreview.hidden = true;
+  elements.interestPreview.classList.remove('error');
+  elements.interestPreview.textContent = '';
+}
+
+function focusInterestForm() {
+  elements.interestForm.classList.add('is-editing');
+  const behavior = uiState.reducedMotion ? 'auto' : 'smooth';
+  elements.interestForm.scrollIntoView({ behavior, block: 'nearest' });
+  elements.interestName.focus({ preventScroll: true });
 }
 
 function syncInputsFromState() {
@@ -270,6 +289,7 @@ function render() {
   const allocationModel = buildAllocationModel();
   renderBucketControls(allocationModel.percentageTotal);
   renderPercentageMessage(allocationModel.percentageTotal);
+  renderInterestPreview();
   renderInterestList();
   renderBucketResults(allocationModel);
   renderAllocationList(allocationModel);
@@ -306,6 +326,120 @@ function renderPercentageMessage(total) {
   const difference = Math.abs(100 - total);
   const direction = total < 100 ? 'Add' : 'Remove';
   setMessage(elements.percentageMessage, `${direction} ${formatNumber(difference)}% to reach 100%. Current total: ${formatNumber(total)}%.`, true);
+}
+
+function renderInterestPreview() {
+  const draft = getDraftInterest();
+
+  elements.interestForm.classList.toggle('is-editing', Boolean(uiState.editingInterestId));
+
+  if (!draft.name && !uiState.editingInterestId) {
+    elements.interestPreview.hidden = true;
+    return;
+  }
+
+  if (getPercentageTotal() !== 100) {
+    showPreviewMessage('Preview unavailable until bucket percentages total 100%.', true);
+    return;
+  }
+
+  if (state.freeHours <= 0) {
+    showPreviewMessage('Enter weekly free hours to preview this interest allocation.', true);
+    return;
+  }
+
+  if (draft.weight === null || !draft.name) {
+    showPreviewMessage('Enter a name and a weight greater than 0 to preview the allocation.', true);
+    return;
+  }
+
+  const preview = buildPreviewAllocation(draft);
+  if (!preview) {
+    showPreviewMessage('Preview unavailable for the current bucket selection.', true);
+    return;
+  }
+
+  const deltaText = preview.delta === null
+    ? 'This will be a new allocation.'
+    : preview.delta === 0
+      ? 'No change from the current saved allocation.'
+      : `${preview.delta > 0 ? 'Gain' : 'Lose'} ${formatNumber(Math.abs(preview.delta))} hours compared with the current saved value.`;
+
+  elements.interestPreview.hidden = false;
+  elements.interestPreview.classList.toggle('error', false);
+  elements.interestPreview.innerHTML = [
+    '<span class="preview-label">Live preview</span>',
+    `<strong class="preview-hours">${formatHours(preview.hours)}</strong>`,
+    `<span class="preview-meta">${draft.bucketLabel} at weight ${formatNumber(draft.weight)}. ${deltaText}</span>`
+  ].join('');
+}
+
+function getDraftInterest() {
+  const bucket = elements.interestBucket.value;
+  const weight = parsePositiveNumber(elements.interestWeight.value, null);
+  return {
+    id: elements.interestId.value || createId(),
+    existingId: elements.interestId.value,
+    name: elements.interestName.value.trim(),
+    bucket,
+    bucketLabel: getBucketName(bucket),
+    weight
+  };
+}
+
+function buildPreviewAllocation(draft) {
+  const draftInterest = {
+    id: draft.existingId || draft.id,
+    name: draft.name,
+    bucket: draft.bucket,
+    weight: draft.weight
+  };
+
+  const draftInterests = draft.existingId
+    ? state.interests.map((interest) => (interest.id === draft.existingId ? draftInterest : interest))
+    : state.interests.concat(draftInterest);
+
+  const targetBucketInterests = draftInterests.filter((interest) => interest.bucket === draft.bucket);
+  const bucketPercentage = state.bucketPercentages[draft.bucket];
+  const bucketHours = (state.freeHours * bucketPercentage) / 100;
+  const totalWeight = targetBucketInterests.reduce((sum, interest) => sum + interest.weight, 0);
+  const currentAllocation = state.interests.find((interest) => interest.id === draft.existingId);
+  const currentHours = currentAllocation ? getInterestHours(currentAllocation, state.interests) : null;
+
+  if (!totalWeight) {
+    return null;
+  }
+
+  const matchingInterest = targetBucketInterests.find((interest) => interest.id === draftInterest.id);
+  if (!matchingInterest) {
+    return null;
+  }
+
+  const hours = bucketHours * (matchingInterest.weight / totalWeight);
+  return {
+    hours,
+    delta: currentHours === null ? null : hours - currentHours
+  };
+}
+
+function getInterestHours(targetInterest, interests) {
+  const bucketPercentage = state.bucketPercentages[targetInterest.bucket];
+  const bucketHours = (state.freeHours * bucketPercentage) / 100;
+  const targetBucketInterests = interests.filter((interest) => interest.bucket === targetInterest.bucket);
+  const totalWeight = targetBucketInterests.reduce((sum, interest) => sum + interest.weight, 0);
+  if (!totalWeight) {
+    return 0;
+  }
+  return bucketHours * (targetInterest.weight / totalWeight);
+}
+
+function showPreviewMessage(text, isError) {
+  elements.interestPreview.hidden = false;
+  elements.interestPreview.classList.toggle('error', isError);
+  elements.interestPreview.innerHTML = [
+    '<span class="preview-label">Live preview</span>',
+    `<span class="preview-meta">${text}</span>`
+  ].join('');
 }
 
 function renderInterestList() {
