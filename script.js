@@ -19,11 +19,19 @@ const uiState = {
 
 const elements = {
   freeHours: document.getElementById('free-hours'),
+  bucketControls: document.getElementById('bucket-controls'),
   bucketInputs: {
     '1': document.getElementById('bucket-1'),
     '2': document.getElementById('bucket-2'),
     '3': document.getElementById('bucket-3')
   },
+  bucketRanges: {
+    '1': document.getElementById('bucket-1-range'),
+    '2': document.getElementById('bucket-2-range'),
+    '3': document.getElementById('bucket-3-range')
+  },
+  allocationTotal: document.getElementById('allocation-total'),
+  allocationProgress: document.getElementById('allocation-progress-bar'),
   percentageMessage: document.getElementById('percentage-message'),
   interestForm: document.getElementById('interest-form'),
   interestId: document.getElementById('interest-id'),
@@ -105,6 +113,10 @@ function bindEvents() {
     input.addEventListener('input', () => handleBucketPercentageChange(bucketId, input.value));
   });
 
+  Object.entries(elements.bucketRanges).forEach(([bucketId, input]) => {
+    input.addEventListener('input', () => handleBucketPercentageChange(bucketId, input.value));
+  });
+
   elements.interestForm.addEventListener('submit', handleInterestSubmit);
   elements.cancelEdit.addEventListener('click', resetInterestForm);
   elements.resetButton.addEventListener('click', handleReset);
@@ -119,6 +131,7 @@ function handleFreeHoursChange() {
 
 function handleBucketPercentageChange(bucketId, rawValue) {
   state.bucketPercentages[bucketId] = parseBucketPercentage(rawValue, state.bucketPercentages[bucketId]);
+  syncBucketInputs(bucketId);
   saveState();
   render();
 }
@@ -242,15 +255,20 @@ function resetInterestForm() {
 
 function syncInputsFromState() {
   elements.freeHours.value = String(state.freeHours);
-  Object.entries(elements.bucketInputs).forEach(([bucketId, input]) => {
-    input.value = String(state.bucketPercentages[bucketId]);
-  });
+  Object.keys(elements.bucketInputs).forEach(syncBucketInputs);
   resetInterestForm();
+}
+
+function syncBucketInputs(bucketId) {
+  const value = String(state.bucketPercentages[bucketId]);
+  elements.bucketInputs[bucketId].value = value;
+  elements.bucketRanges[bucketId].value = value;
 }
 
 function render() {
   const previousAllocations = uiState.previousAllocations;
   const allocationModel = buildAllocationModel();
+  renderBucketControls(allocationModel.percentageTotal);
   renderPercentageMessage(allocationModel.percentageTotal);
   renderInterestList();
   renderBucketResults(allocationModel);
@@ -266,13 +284,28 @@ function buildAllocationModel() {
   return { percentageTotal, bucketAllocations, allocations };
 }
 
+function renderBucketControls(total) {
+  const progressRatio = Math.min(total, 100) / 100;
+  elements.allocationTotal.textContent = `${formatNumber(total)}%`;
+  elements.allocationProgress.style.transform = `scaleX(${progressRatio})`;
+  elements.bucketControls.querySelector('.allocation-progress').classList.toggle('is-invalid', total !== 100);
+
+  Object.entries(elements.bucketInputs).forEach(([bucketId, input]) => {
+    const wrapper = input.closest('.bucket-field');
+    wrapper.classList.toggle('is-invalid', total !== 100);
+    elements.bucketRanges[bucketId].setAttribute('aria-valuenow', input.value);
+  });
+}
+
 function renderPercentageMessage(total) {
   if (total === 100) {
     setMessage(elements.percentageMessage, '100% allocated across all three buckets.', false);
     return;
   }
 
-  setMessage(elements.percentageMessage, `Adjust the buckets until they total 100%. Current total: ${formatNumber(total)}%.`, true);
+  const difference = Math.abs(100 - total);
+  const direction = total < 100 ? 'Add' : 'Remove';
+  setMessage(elements.percentageMessage, `${direction} ${formatNumber(difference)}% to reach 100%. Current total: ${formatNumber(total)}%.`, true);
 }
 
 function renderInterestList() {

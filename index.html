@@ -27,23 +27,41 @@
         </label>
       </div>
 
-      <div class="percentages">
+      <div class="percentages" id="bucket-controls">
         <div class="subsection-copy">
           <h3>Bucket percentages</h3>
           <p>All three buckets should total 100% of your weekly free time.</p>
         </div>
+        <div class="allocation-progress" aria-live="polite">
+          <div class="allocation-progress-head">
+            <strong>Total allocated</strong>
+            <span id="allocation-total">100%</span>
+          </div>
+          <div class="allocation-progress-track" aria-hidden="true">
+            <div id="allocation-progress-bar" class="allocation-progress-bar"></div>
+          </div>
+        </div>
         <div class="field-grid field-grid-buckets">
           <label class="field bucket-field bucket-1">
             <span>Bucket 1: Wealth</span>
-            <input id="bucket-1" type="number" min="0" max="100" step="1" value="80">
+            <div class="bucket-control">
+              <input id="bucket-1-range" type="range" min="0" max="100" step="1" value="80">
+              <input id="bucket-1" type="number" min="0" max="100" step="1" value="80">
+            </div>
           </label>
           <label class="field bucket-field bucket-2">
             <span>Bucket 2: Necessary</span>
-            <input id="bucket-2" type="number" min="0" max="100" step="1" value="15">
+            <div class="bucket-control">
+              <input id="bucket-2-range" type="range" min="0" max="100" step="1" value="15">
+              <input id="bucket-2" type="number" min="0" max="100" step="1" value="15">
+            </div>
           </label>
           <label class="field bucket-field bucket-3">
             <span>Bucket 3: Pure interest</span>
-            <input id="bucket-3" type="number" min="0" max="100" step="1" value="5">
+            <div class="bucket-control">
+              <input id="bucket-3-range" type="range" min="0" max="100" step="1" value="5">
+              <input id="bucket-3" type="number" min="0" max="100" step="1" value="5">
+            </div>
           </label>
         </div>
         <p id="percentage-message" class="message" aria-live="polite"></p>

@@ -222,6 +222,16 @@ button:focus-visible {
   box-shadow: 0 0 0 4px rgba(23, 76, 60, 0.15);
 }
 
+input[type="range"] {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  accent-color: var(--accent);
+  box-shadow: none;
+}
+
 .button,
 button {
   min-height: 44px;
@@ -263,6 +273,48 @@ button.secondary {
   margin-top: 16px;
 }
 
+.allocation-progress {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(92, 77, 57, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.allocation-progress.is-invalid {
+  border-color: rgba(156, 61, 39, 0.22);
+}
+
+.allocation-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.95rem;
+}
+
+.allocation-progress-track {
+  overflow: hidden;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(92, 77, 57, 0.12);
+}
+
+.allocation-progress-bar {
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--bucket-1), var(--bucket-2), var(--bucket-3));
+  transform-origin: left center;
+  transition: transform var(--motion-medium) var(--ease-out), filter var(--motion-fast) ease;
+}
+
+.allocation-progress.is-invalid .allocation-progress-bar {
+  filter: saturate(0.7);
+}
+
 .field-grid-buckets {
   margin-top: 12px;
 }
@@ -277,6 +329,17 @@ button.secondary {
 .bucket-field:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 24px rgba(73, 49, 23, 0.08);
+}
+
+.bucket-field.is-invalid {
+  border-color: rgba(156, 61, 39, 0.3);
+}
+
+.bucket-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 12px;
+  align-items: center;
 }
 
 .bucket-1 {
@@ -487,9 +550,7 @@ button.secondary {
 
 .preview-card,
 .summary-line,
-.allocation-progress,
 .bucket-detail-list,
-.bucket-control,
 .bucket-toggle {
   display: none;
 }
@@ -568,6 +629,10 @@ button.secondary {
 
   .field-grid > .field:first-child:last-child {
     grid-column: span 1;
+  }
+
+  .bucket-control {
+    grid-template-columns: 1fr;
   }
 
   .section-head {
