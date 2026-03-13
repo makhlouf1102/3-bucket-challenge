@@ -1,8 +1,8 @@
 const STORAGE_KEY = 'threeBucketPlannerState';
 const BUCKETS = [
-  { id: '1', name: 'Bucket 1: Wealth' },
-  { id: '2', name: 'Bucket 2: Necessary' },
-  { id: '3', name: 'Bucket 3: Pure interest' }
+  { id: '1', name: 'Bucket 1: Wealth', accentClass: 'bucket-1-card', label: 'Wealth' },
+  { id: '2', name: 'Bucket 2: Necessary', accentClass: 'bucket-2-card', label: 'Necessary' },
+  { id: '3', name: 'Bucket 3: Pure interest', accentClass: 'bucket-3-card', label: 'Pure interest' }
 ];
 
 const state = loadState();
@@ -54,9 +54,9 @@ function loadState() {
     return {
       freeHours: parseNonNegativeNumber(parsed.freeHours, defaults.freeHours),
       bucketPercentages: {
-        '1': parseNonNegativeNumber(parsed.bucketPercentages?.['1'], defaults.bucketPercentages['1']),
-        '2': parseNonNegativeNumber(parsed.bucketPercentages?.['2'], defaults.bucketPercentages['2']),
-        '3': parseNonNegativeNumber(parsed.bucketPercentages?.['3'], defaults.bucketPercentages['3'])
+        '1': parseBucketPercentage(parsed.bucketPercentages?.['1'], defaults.bucketPercentages['1']),
+        '2': parseBucketPercentage(parsed.bucketPercentages?.['2'], defaults.bucketPercentages['2']),
+        '3': parseBucketPercentage(parsed.bucketPercentages?.['3'], defaults.bucketPercentages['3'])
       },
       interests: Array.isArray(parsed.interests)
         ? parsed.interests
@@ -100,6 +100,7 @@ function bindEvents() {
   elements.interestForm.addEventListener('submit', handleInterestSubmit);
   elements.cancelEdit.addEventListener('click', resetInterestForm);
   elements.resetButton.addEventListener('click', handleReset);
+  elements.interestList.addEventListener('click', handleInterestListClick);
 }
 
 function handleFreeHoursChange() {
@@ -109,7 +110,7 @@ function handleFreeHoursChange() {
 }
 
 function handleBucketPercentageChange(bucketId) {
-  const parsed = parseNonNegativeNumber(elements.bucketInputs[bucketId].value, state.bucketPercentages[bucketId]);
+  const parsed = parseBucketPercentage(elements.bucketInputs[bucketId].value, state.bucketPercentages[bucketId]);
   state.bucketPercentages[bucketId] = parsed;
   saveState();
   render();
@@ -154,6 +155,24 @@ function handleInterestSubmit(event) {
   saveState();
   resetInterestForm();
   render();
+}
+
+function handleInterestListClick(event) {
+  const button = event.target.closest('button[data-action]');
+  if (!button) {
+    return;
+  }
+
+  const interestId = button.dataset.id;
+  const action = button.dataset.action;
+
+  if (action === 'edit') {
+    handleEditInterest(interestId);
+  }
+
+  if (action === 'delete') {
+    handleDeleteInterest(interestId);
+  }
 }
 
 function handleEditInterest(interestId) {
@@ -225,46 +244,34 @@ function render() {
 function renderPercentageMessage() {
   const total = getPercentageTotal();
   if (total === 100) {
-    setMessage(elements.percentageMessage, 'Bucket percentages are valid.', false);
+    setMessage(elements.percentageMessage, '100% allocated across all three buckets.', false);
     return;
   }
 
-  setMessage(elements.percentageMessage, `Bucket percentages must total 100%. Current total: ${formatNumber(total)}%.`, true);
+  setMessage(elements.percentageMessage, `Adjust the buckets until they total 100%. Current total: ${formatNumber(total)}%.`, true);
 }
 
 function renderInterestList() {
   if (state.interests.length === 0) {
-    elements.interestList.innerHTML = '<tr><td colspan="4">No interests added yet.</td></tr>';
+    elements.interestList.innerHTML = '<tr class="empty-state"><td colspan="4">No interests added yet.</td></tr>';
     return;
   }
 
   elements.interestList.innerHTML = state.interests
     .map((interest) => `
       <tr>
-        <td>${escapeHtml(interest.name)}</td>
-        <td>${escapeHtml(getBucketName(interest.bucket))}</td>
-        <td>${formatNumber(interest.weight)}</td>
-        <td class="row-actions">
-          <button type="button" data-action="edit" data-id="${interest.id}">Edit</button>
-          <button type="button" class="secondary" data-action="delete" data-id="${interest.id}">Delete</button>
+        <td data-label="Interest">${escapeHtml(interest.name)}</td>
+        <td data-label="Bucket">${escapeHtml(getBucketName(interest.bucket))}</td>
+        <td data-label="Weight">${formatNumber(interest.weight)}</td>
+        <td data-label="Actions">
+          <div class="row-actions">
+            <button type="button" class="button" data-action="edit" data-id="${interest.id}">Edit</button>
+            <button type="button" class="button button-ghost button-danger" data-action="delete" data-id="${interest.id}">Delete</button>
+          </div>
         </td>
       </tr>
     `)
     .join('');
-
-  elements.interestList.querySelectorAll('button').forEach((button) => {
-    const interestId = button.dataset.id;
-    const action = button.dataset.action;
-
-    button.addEventListener('click', () => {
-      if (action === 'edit') {
-        handleEditInterest(interestId);
-      }
-      if (action === 'delete') {
-        handleDeleteInterest(interestId);
-      }
-    });
-  });
 }
 
 function renderResults() {
@@ -273,23 +280,32 @@ function renderResults() {
 
   elements.bucketResults.innerHTML = bucketAllocations
     .map((bucket) => `
-      <article class="bucket-card">
+      <article class="bucket-card ${bucket.accentClass}">
+        <div class="kicker">${escapeHtml(bucket.label)}</div>
         <h3>${escapeHtml(bucket.name)}</h3>
-        <p>${formatNumber(bucket.percentage)}% of free time</p>
-        <p><strong>${formatHours(bucket.hours)}</strong> per week</p>
-        <p>${bucket.interests.length} interest${bucket.interests.length === 1 ? '' : 's'}</p>
-        <p>${bucket.interests.length === 0 ? 'Currently unassigned.' : 'Assigned and split by weight.'}</p>
+        <div class="bucket-hours"><strong>${formatHours(bucket.hours)}</strong></div>
+        <div class="bucket-meta">
+          <div class="bucket-meta-item">
+            <span class="bucket-meta-label">Share</span>
+            <strong>${formatNumber(bucket.percentage)}%</strong>
+          </div>
+          <div class="bucket-meta-item">
+            <span class="bucket-meta-label">Interests</span>
+            <strong>${bucket.interests.length}</strong>
+          </div>
+        </div>
+        <p class="bucket-status">${escapeHtml(getBucketStatus(bucket, percentageTotal))}</p>
       </article>
     `)
     .join('');
 
   if (state.interests.length === 0) {
-    elements.allocationList.innerHTML = '<tr><td colspan="4">Add interests to see per-interest hours.</td></tr>';
+    elements.allocationList.innerHTML = '<tr class="empty-state"><td colspan="4">Add interests to see per-interest hours.</td></tr>';
     return;
   }
 
   if (percentageTotal !== 100) {
-    elements.allocationList.innerHTML = '<tr><td colspan="4">Fix the bucket percentages so they total 100% to see allocations.</td></tr>';
+    elements.allocationList.innerHTML = '<tr class="empty-state"><td colspan="4">Fix the bucket percentages so they total 100% to see allocations.</td></tr>';
     return;
   }
 
@@ -298,10 +314,10 @@ function renderResults() {
   elements.allocationList.innerHTML = allocations
     .map((item) => `
       <tr>
-        <td>${escapeHtml(item.name)}</td>
-        <td>${escapeHtml(getBucketName(item.bucket))}</td>
-        <td>${formatNumber(item.weight)}</td>
-        <td>${formatHours(item.hours)}</td>
+        <td data-label="Interest">${escapeHtml(item.name)}</td>
+        <td data-label="Bucket">${escapeHtml(getBucketName(item.bucket))}</td>
+        <td data-label="Weight">${formatNumber(item.weight)}</td>
+        <td data-label="Hours per week">${formatHours(item.hours)}</td>
       </tr>
     `)
     .join('');
@@ -344,6 +360,22 @@ function buildBucketAllocation(bucket) {
   return { ...bucket, percentage, hours, interests, allocations };
 }
 
+function getBucketStatus(bucket, percentageTotal) {
+  if (percentageTotal !== 100) {
+    return 'Waiting for a valid 100% split before hours can be calculated.';
+  }
+
+  if (bucket.interests.length === 0) {
+    return 'No interests assigned yet for this bucket.';
+  }
+
+  if (bucket.interests.length === 1) {
+    return 'All of this bucket goes to a single interest.';
+  }
+
+  return 'Assigned and split by weight across your interests.';
+}
+
 function getPercentageTotal() {
   return Object.values(state.bucketPercentages).reduce((sum, value) => sum + value, 0);
 }
@@ -356,6 +388,14 @@ function parseNonNegativeNumber(value, fallback) {
   const parsed = Number(value);
   if (Number.isFinite(parsed) && parsed >= 0) {
     return parsed;
+  }
+  return fallback;
+}
+
+function parseBucketPercentage(value, fallback) {
+  const parsed = Number(value);
+  if (Number.isFinite(parsed) && parsed >= 0) {
+    return Math.min(parsed, 100);
   }
   return fallback;
 }
