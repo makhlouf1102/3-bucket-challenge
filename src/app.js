@@ -4,6 +4,7 @@ import { ACTIONS, createPlannerDispatcher } from './actions/index.js';
 import {
   bindAppElements,
   buildDraftInterest,
+  buildJourneyStatus,
   createDefaultUiState,
   populateInterestForm,
   renderInterestForm,
@@ -44,9 +45,15 @@ function initialize() {
 function render() {
   const draftInterest = buildDraftInterest(elements.interestForm);
   const model = derivePlannerModel(appState.plannerState, appState.uiState, draftInterest);
+  const journeyStatus = buildJourneyStatus({
+    plannerState: appState.plannerState,
+    model,
+    uiState: appState.uiState
+  });
+  appState.uiState.journeyStage = journeyStatus.stage;
 
   renderSetup({
-    elements: elements.setup,
+    elements: { ...elements.setup, journey: elements.journey },
     plannerState: appState.plannerState,
     model,
     uiState: appState.uiState
@@ -74,9 +81,54 @@ function render() {
     uiState: appState.uiState
   });
 
+  applyPendingFocus(appState.uiState, model);
   appState.uiState.previousAllocations = new Map(model.allocations.map((item) => [item.id, item.hours]));
   appState.uiState.lastChangedInterestId = '';
   appState.uiState.lastDeletedInterestId = '';
+}
+
+function resolveFocusTarget(target, plannerState, model) {
+  switch (target) {
+    case 'after-save':
+      if (plannerState.freeHours > 0 && model.isPercentageValid && model.allocations.length > 0) {
+        return 'allocation-summary';
+      }
+      return 'interest-name';
+    case 'after-delete':
+      return plannerState.interests.length > 0 ? 'interest-name' : 'free-hours';
+    case 'interest-name':
+      return 'interest-name';
+    case 'free-hours':
+      return 'free-hours';
+    default:
+      return '';
+  }
+}
+
+function applyPendingFocus(uiState, model) {
+  if (!uiState.pendingFocusTarget) {
+    return;
+  }
+
+  const target = resolveFocusTarget(uiState.pendingFocusTarget, appState.plannerState, model);
+  uiState.pendingFocusTarget = '';
+
+  if (!target) {
+    return;
+  }
+
+  const targetMap = {
+    'allocation-summary': elements.results.allocationSummary,
+    'free-hours': elements.setup.freeHours,
+    'interest-name': elements.interestForm.interestName
+  };
+
+  const element = targetMap[target];
+  if (!element || typeof element.focus !== 'function') {
+    return;
+  }
+
+  element.focus({ preventScroll: true });
 }
 
 function bindEvents() {

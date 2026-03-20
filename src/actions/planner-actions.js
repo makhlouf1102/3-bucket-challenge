@@ -68,12 +68,14 @@ export function createPlannerDispatcher({ getState, setState, render, store }) {
           ));
           nextUiState.lastChangedInterestId = existingId;
           nextUiState.editingInterestId = '';
-          result = { ok: true, message: 'Interest updated.', isError: false };
+          nextUiState.pendingFocusTarget = 'after-save';
+          result = { ok: true, message: 'Interest updated. Review the allocation preview or add another interest.', isError: false };
         } else {
           const newId = createId();
           nextPlannerState.interests.push({ id: newId, name, bucket, weight });
           nextUiState.lastChangedInterestId = newId;
-          result = { ok: true, message: 'Interest added.', isError: false };
+          nextUiState.pendingFocusTarget = 'after-save';
+          result = { ok: true, message: 'Interest added. Review the allocation preview or add another interest.', isError: false };
         }
 
         shouldPersist = true;
@@ -81,10 +83,12 @@ export function createPlannerDispatcher({ getState, setState, render, store }) {
       }
       case ACTIONS.EDIT_INTEREST:
         nextUiState.editingInterestId = String(action.payload?.id ?? '');
-        result = { ok: true, message: 'Editing interest.', isError: false };
+        nextUiState.pendingFocusTarget = 'interest-name';
+        result = { ok: true, message: 'Editing interest. Update the details and keep the flow moving.', isError: false };
         break;
       case ACTIONS.CANCEL_EDIT:
         nextUiState.editingInterestId = '';
+        nextUiState.pendingFocusTarget = 'interest-name';
         break;
       case ACTIONS.DELETE_INTEREST: {
         const interestId = String(action.payload?.id ?? '');
@@ -93,7 +97,8 @@ export function createPlannerDispatcher({ getState, setState, render, store }) {
         if (nextUiState.editingInterestId === interestId) {
           nextUiState.editingInterestId = '';
         }
-        result = { ok: true, message: 'Interest deleted.', isError: false };
+        nextUiState.pendingFocusTarget = 'after-delete';
+        result = { ok: true, message: 'Interest deleted. Continue shaping the week.', isError: false };
         shouldPersist = true;
         break;
       }
@@ -106,8 +111,9 @@ export function createPlannerDispatcher({ getState, setState, render, store }) {
         nextUiState.lastChangedInterestId = '';
         nextUiState.lastDeletedInterestId = '';
         nextUiState.summaryText = '';
+        nextUiState.pendingFocusTarget = 'free-hours';
         shouldClearPersistence = true;
-        result = { ok: true, message: 'All planner data cleared.', isError: false };
+        result = { ok: true, message: 'All planner data cleared. Start with free hours again.', isError: false };
         break;
       case ACTIONS.TOGGLE_BUCKET_EXPANDED: {
         const bucketId = String(action.payload?.bucketId ?? '');

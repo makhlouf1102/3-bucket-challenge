@@ -4,6 +4,8 @@
  * @property {string} expandedBucketId
  * @property {string} lastChangedInterestId
  * @property {string} lastDeletedInterestId
+ * @property {'setup' | 'interests' | 'results'} journeyStage
+ * @property {string} pendingFocusTarget
  * @property {Map<string, number>} previousAllocations
  * @property {string} summaryText
  * @property {boolean} reducedMotion
@@ -22,6 +24,8 @@ export function createDefaultUiState() {
     expandedBucketId: '',
     lastChangedInterestId: '',
     lastDeletedInterestId: '',
+    journeyStage: 'setup',
+    pendingFocusTarget: '',
     previousAllocations: new Map(),
     summaryText: '',
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches

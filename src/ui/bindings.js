@@ -6,6 +6,21 @@ function requireElement(root, id) {
   return element;
 }
 
+function bindJourneyElements(root = document) {
+  return {
+    onboarding: requireElement(root, 'hero-onboarding'),
+    statusLabel: requireElement(root, 'journey-status-label'),
+    title: requireElement(root, 'journey-title'),
+    detail: requireElement(root, 'journey-status-detail'),
+    progressValue: requireElement(root, 'journey-progress-value'),
+    progressBar: requireElement(root, 'journey-progress-bar'),
+    tip: requireElement(root, 'journey-status-tip'),
+    stepSetup: requireElement(root, 'step-setup'),
+    stepInterests: requireElement(root, 'step-interests'),
+    stepResults: requireElement(root, 'step-results')
+  };
+}
+
 export function bindSetupElements(root = document) {
   return {
     freeHours: requireElement(root, 'free-hours'),
@@ -57,6 +72,7 @@ export function bindResultsElements(root = document) {
 
 export function bindAppElements(root = document) {
   return {
+    journey: bindJourneyElements(root),
     setup: bindSetupElements(root),
     interestForm: bindInterestFormElements(root),
     interestTable: bindInterestTableElements(root),
