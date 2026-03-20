@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { derivePlannerModel, getInterestPreview, validatePlannerState } from '../src/domain/index.js';
+import {
+  buildBucketStatus,
+  buildPercentageMessage,
+  buildSummaryText
+} from '../src/domain/planner-domain.js';
 
 const plannerState = {
   freeHours: 20,
@@ -52,4 +57,13 @@ test('getInterestPreview compares a draft edit against the saved allocation', ()
 
   assert.equal(Number(preview.hours.toFixed(2)), 6.67);
   assert.equal(Number(preview.delta.toFixed(2)), -0.83);
+});
+
+test('copy helpers describe the guided weekly flow', () => {
+  assert.equal(buildBucketStatus({ interests: [] }, 90), 'Complete the 100% split to unlock this bucket breakdown.');
+  assert.equal(buildPercentageMessage(100), 'All three buckets total 100%.');
+  assert.equal(
+    buildSummaryText([{ id: 'a', name: 'Sales', hours: 8 }], new Map(), 100),
+    'Sales currently leads your week at 8 hours.'
+  );
 });

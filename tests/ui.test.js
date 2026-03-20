@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-import { bindAppElements, setMessage } from '../src/ui/index.js';
+import { bindAppElements, buildJourneyStatus, setMessage } from '../src/ui/index.js';
 
 function createFakeElement() {
   const classes = new Set();
@@ -64,6 +64,15 @@ function withFakeWindow(callback) {
   } finally {
     globalThis.window = previousWindow;
   }
+}
+
+function createPlannerState(overrides = {}) {
+  return {
+    freeHours: 0,
+    bucketPercentages: { '1': 80, '2': 15, '3': 5 },
+    interests: [],
+    ...overrides
+  };
 }
 
 export function registerUiTests(run) {
@@ -150,5 +159,32 @@ export function registerUiTests(run) {
       assert.equal(element.classList.contains('error'), true);
       assert.equal(element.textContent, 'Updated status message');
     });
+  });
+
+  run('ui journey status tracks the current planning stage', () => {
+    const setupStatus = buildJourneyStatus({
+      plannerState: createPlannerState(),
+      model: { isPercentageValid: false, allocations: [] },
+      uiState: { editingInterestId: '', journeyStage: 'setup' }
+    });
+    const interestStatus = buildJourneyStatus({
+      plannerState: createPlannerState({ freeHours: 12, bucketPercentages: { '1': 50, '2': 30, '3': 20 } }),
+      model: { isPercentageValid: true, allocations: [] },
+      uiState: { editingInterestId: '', journeyStage: 'setup' }
+    });
+    const resultStatus = buildJourneyStatus({
+      plannerState: createPlannerState({
+        freeHours: 12,
+        bucketPercentages: { '1': 50, '2': 30, '3': 20 },
+        interests: [{ id: 'a', name: 'Reading', bucket: '3', weight: 1 }]
+      }),
+      model: { isPercentageValid: true, allocations: [{ id: 'a' }] },
+      uiState: { editingInterestId: '', journeyStage: 'setup' }
+    });
+
+    assert.equal(setupStatus.stage, 'setup');
+    assert.equal(interestStatus.stage, 'interests');
+    assert.equal(resultStatus.stage, 'results');
+    assert.equal(resultStatus.progressValue, '3/3');
   });
 }

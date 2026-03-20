@@ -15,6 +15,8 @@ function createHarness() {
       expandedBucketId: '',
       lastChangedInterestId: '',
       lastDeletedInterestId: '',
+      journeyStage: 'setup',
+      pendingFocusTarget: '',
       previousAllocations: new Map(),
       summaryText: '',
       reducedMotion: true
@@ -56,6 +58,7 @@ test('saveInterest adds a new interest and persists state', () => {
   assert.equal(harness.state.plannerState.interests.length, 1);
   assert.equal(harness.persisted[0].type, 'save');
   assert.equal(harness.renderCount, 1);
+  assert.equal(harness.state.uiState.pendingFocusTarget, 'after-save');
 });
 
 test('resetPlanner clears the planner and clears persistence', () => {
@@ -65,4 +68,5 @@ test('resetPlanner clears the planner and clears persistence', () => {
 
   assert.deepEqual(harness.state.plannerState.interests, []);
   assert.equal(harness.persisted[0].type, 'clear');
+  assert.equal(harness.state.uiState.pendingFocusTarget, 'free-hours');
 });
