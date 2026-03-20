@@ -54,39 +54,42 @@ export function renderInterestForm({ elements, plannerState, model, uiState, mes
   elements.saveInterest.textContent = uiState.editingInterestId ? 'Update interest' : 'Save interest';
   elements.cancelEdit.hidden = !uiState.editingInterestId;
 
-  setMessage(elements.interestMessage, message || '', Boolean(messageIsError), uiState.reducedMotion);
-
   const draft = buildDraftInterest(elements);
+  const helperMessage = message || (uiState.editingInterestId
+    ? 'You are editing a saved interest. Update the details, then review the allocation preview.'
+    : 'Add a name, choose a bucket, and set a weight to preview the allocation.');
+  setMessage(elements.interestMessage, helperMessage, Boolean(messageIsError), uiState.reducedMotion);
+
   if (!draft.name && !uiState.editingInterestId) {
-    elements.interestPreview.hidden = true;
+    showPreviewMessage(elements.interestPreview, 'Name an interest to see the live allocation preview.', false);
     return;
   }
 
   if (!model.isPercentageValid) {
-    showPreviewMessage(elements.interestPreview, 'Preview unavailable until bucket percentages total 100%.', true);
+    showPreviewMessage(elements.interestPreview, 'Set the buckets to 100% before previewing this interest.', true);
     return;
   }
 
   if (plannerState.freeHours <= 0) {
-    showPreviewMessage(elements.interestPreview, 'Enter weekly free hours to preview this interest allocation.', true);
+    showPreviewMessage(elements.interestPreview, 'Enter weekly free hours to preview how this interest will land.', true);
     return;
   }
 
   if (draft.weight === null || !draft.name) {
-    showPreviewMessage(elements.interestPreview, 'Enter a name and a weight greater than 0 to preview the allocation.', true);
+    showPreviewMessage(elements.interestPreview, 'Give the interest a name and a weight greater than 0 to calculate its share.', true);
     return;
   }
 
   if (!model.preview) {
-    showPreviewMessage(elements.interestPreview, 'Preview unavailable for the current bucket selection.', true);
+    showPreviewMessage(elements.interestPreview, 'Preview unavailable for the selected bucket. Try another bucket or adjust the split.', true);
     return;
   }
 
   const deltaText = model.preview.delta === null
-    ? 'This will be a new allocation.'
+    ? 'This will create a new allocation.'
     : model.preview.delta === 0
-      ? 'No change from the current saved allocation.'
-      : `${model.preview.delta > 0 ? 'Gain' : 'Lose'} ${formatNumber(Math.abs(model.preview.delta))} hours compared with the current saved value.`;
+      ? 'This keeps the current allocation unchanged.'
+      : `${model.preview.delta > 0 ? 'Gain' : 'Lose'} ${formatNumber(Math.abs(model.preview.delta))} hours compared with the saved value.`;
 
   elements.interestPreview.hidden = false;
   elements.interestPreview.classList.toggle('error', false);

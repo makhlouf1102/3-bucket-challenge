@@ -29,12 +29,12 @@ function updateAllocationRow(row, item, reducedMotion) {
 
 function renderBucketDetails(container, bucket, percentageTotal) {
   if (percentageTotal !== 100) {
-    container.innerHTML = '<p class="bucket-detail-empty">Finish the 100% split to inspect bucket details.</p>';
+    container.innerHTML = '<p class="bucket-detail-empty">Bring the bucket split to 100% to unlock the breakdown.</p>';
     return;
   }
 
   if (!bucket.allocations.length) {
-    container.innerHTML = '<p class="bucket-detail-empty">No interests assigned to this bucket yet.</p>';
+    container.innerHTML = '<p class="bucket-detail-empty">This bucket is empty. Add an interest to see the split.</p>';
     return;
   }
 
@@ -108,13 +108,8 @@ function updateBucketCard(article, bucket, percentageTotal, uiState) {
 }
 
 export function renderResults({ elements, plannerState, model, uiState, root = document }) {
-  if (!model.summaryText) {
-    elements.allocationSummary.hidden = true;
-    elements.allocationSummary.textContent = '';
-  } else {
-    elements.allocationSummary.hidden = false;
-    elements.allocationSummary.textContent = model.summaryText;
-  }
+  elements.allocationSummary.hidden = false;
+  elements.allocationSummary.textContent = model.summaryText;
 
   syncKeyedChildren({
     container: elements.bucketResults,
@@ -126,9 +121,11 @@ export function renderResults({ elements, plannerState, model, uiState, root = d
   });
 
   if (plannerState.interests.length === 0) {
-    elements.allocationList.innerHTML = '<tr class="empty-state"><td colspan="4">Add interests to see per-interest hours.</td></tr>';
+    elements.allocationList.innerHTML = '<tr class="empty-state"><td colspan="4">Add interests above to see each one\'s weekly hours here.</td></tr>';
   } else if (!model.isPercentageValid) {
-    elements.allocationList.innerHTML = '<tr class="empty-state"><td colspan="4">Fix the bucket percentages so they total 100% to see allocations.</td></tr>';
+    elements.allocationList.innerHTML = '<tr class="empty-state"><td colspan="4">Bring the bucket percentages back to 100% to reveal the allocation rows.</td></tr>';
+  } else if (model.allocations.length === 0) {
+    elements.allocationList.innerHTML = '<tr class="empty-state"><td colspan="4">Add interests to unlock the weekly allocation table.</td></tr>';
   } else {
     syncRows({
       tbody: elements.allocationList,
@@ -136,7 +133,7 @@ export function renderResults({ elements, plannerState, model, uiState, root = d
       getKey: (allocation) => allocation.id,
       buildRow: (item) => buildAllocationRow(item, uiState.reducedMotion),
       updateRow: (row, item) => updateAllocationRow(row, item, uiState.reducedMotion),
-      emptyMarkup: '<tr class="empty-state"><td colspan="4">Add interests to see per-interest hours.</td></tr>',
+      emptyMarkup: '<tr class="empty-state"><td colspan="4">Add interests above to see each one\'s weekly hours here.</td></tr>',
       removeKey: null
     });
   }

@@ -71,18 +71,18 @@ export function getInterestPreview(plannerState, draftInterest) {
 
 export function buildBucketStatus(bucket, percentageTotal) {
   if (percentageTotal !== 100) {
-    return 'Waiting for a valid 100% split before hours can be calculated.';
+    return 'Complete the 100% split to unlock this bucket breakdown.';
   }
 
   if (bucket.interests.length === 0) {
-    return 'No interests assigned yet for this bucket.';
+    return 'No interests assigned yet. Add one to make this bucket active.';
   }
 
   if (bucket.interests.length === 1) {
-    return 'All of this bucket goes to a single interest.';
+    return 'This bucket is currently concentrated in a single interest.';
   }
 
-  return 'Assigned and split by weight across your interests.';
+  return 'This bucket is split by weight across your saved interests.';
 }
 
 export function buildBucketAllocation(plannerState, bucket, percentageTotal) {
@@ -108,7 +108,7 @@ export function buildBucketAllocation(plannerState, bucket, percentageTotal) {
 
 export function buildSummaryText(allocations, previousAllocations, percentageTotal) {
   if (percentageTotal !== 100) {
-    return 'Complete the 100% bucket split to unlock the weekly narrative summary.';
+    return 'Bring the bucket split to 100% to unlock the weekly narrative summary.';
   }
 
   if (!allocations.length) {
@@ -117,7 +117,7 @@ export function buildSummaryText(allocations, previousAllocations, percentageTot
 
   if (!previousAllocations.size) {
     const top = allocations.reduce((best, current) => (current.hours > best.hours ? current : best), allocations[0]);
-    return `${top.name} currently leads your plan at ${formatHours(top.hours)}.`;
+    return `${top.name} currently leads your week at ${formatHours(top.hours)}.`;
   }
 
   let strongest = null;
@@ -131,16 +131,16 @@ export function buildSummaryText(allocations, previousAllocations, percentageTot
 
   if (!strongest || Math.abs(strongest.delta) < 0.01) {
     const top = allocations.reduce((best, current) => (current.hours > best.hours ? current : best), allocations[0]);
-    return `${top.name} currently leads your plan at ${formatHours(top.hours)}.`;
+    return `${top.name} continues to lead your week at ${formatHours(top.hours)}.`;
   }
 
   const direction = strongest.delta > 0 ? 'gained' : 'lost';
-  return `${strongest.item.name} ${direction} ${formatNumber(Math.abs(strongest.delta))} hours this week.`;
+  return `${strongest.item.name} ${direction} ${formatNumber(Math.abs(strongest.delta))} hours in the current plan.`;
 }
 
 export function buildPercentageMessage(percentageTotal) {
   if (percentageTotal === 100) {
-    return '100% allocated across all three buckets.';
+    return 'All three buckets total 100%.';
   }
 
   const difference = Math.abs(100 - percentageTotal);

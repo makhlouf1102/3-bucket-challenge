@@ -32,7 +32,7 @@ function updateInterestRow(row, interest, reducedMotion) {
 
 export function renderInterestTable({ elements, plannerState, uiState }) {
   if (plannerState.interests.length === 0) {
-    elements.interestList.innerHTML = '<tr class="empty-state"><td colspan="4">No interests added yet.</td></tr>';
+    elements.interestList.innerHTML = '<tr class="empty-state"><td colspan="4">No interests yet. Add the first one to make the plan tangible.</td></tr>';
     return;
   }
 
@@ -42,7 +42,7 @@ export function renderInterestTable({ elements, plannerState, uiState }) {
     getKey: (interest) => interest.id,
     buildRow: (interest) => buildInterestRow(interest, uiState.reducedMotion),
     updateRow: (row, interest) => updateInterestRow(row, interest, uiState.reducedMotion),
-    emptyMarkup: '<tr class="empty-state"><td colspan="4">No interests added yet.</td></tr>',
+    emptyMarkup: '<tr class="empty-state"><td colspan="4">No interests yet. Add the first one to make the plan tangible.</td></tr>',
     removeKey: uiState.lastDeletedInterestId,
     removeDelay: uiState.reducedMotion ? 0 : MOTION_MEDIUM_MS
   });
