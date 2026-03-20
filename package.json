@@ -1,0 +1,9 @@
+{
+  "name": "three-bucket-challenge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run-tests.js",
+    "start": "npx serve ."
+  }
+}
