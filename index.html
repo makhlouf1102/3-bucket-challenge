@@ -8,29 +8,77 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="page">
-    <header class="intro">
-      <p class="eyebrow">Weekly time planning</p>
-      <h1>Three Bucket Planner</h1>
-      <p class="lede">Organize your weekly free hours into three buckets, then split each bucket across your current interests by priority.</p>
+  <main class="page page-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Weekly time planning</p>
+        <p class="hero-kicker">Intentional hours, not accidental leftovers.</p>
+        <h1>Three Bucket Planner</h1>
+        <p class="lede">Shape your week in three moves: define your available hours, split them across the buckets that matter, then see exactly where your attention lands.</p>
+        <p id="hero-onboarding" class="hero-onboarding">Start with a realistic number of free hours. The planner will guide you from setup to allocation as soon as the split is valid.</p>
+      </div>
+
+      <aside class="journey-card" aria-labelledby="journey-title">
+        <p id="journey-status-label" class="journey-label">Step 1 of 3</p>
+        <h2 id="journey-title">Set your weekly rhythm.</h2>
+        <p id="journey-status-detail" class="journey-detail">Start by entering the number of free hours you can actually direct this week.</p>
+        <div class="journey-progress" aria-live="polite">
+          <div class="journey-progress-head">
+            <strong>Progress</strong>
+            <span id="journey-progress-value">1/3</span>
+          </div>
+          <div class="journey-progress-track" aria-hidden="true">
+            <div id="journey-progress-bar" class="journey-progress-bar"></div>
+          </div>
+        </div>
+        <ol class="journey-steps" aria-label="Planner steps">
+          <li id="step-setup" class="journey-step is-current">
+            <span class="journey-step-index">01</span>
+            <div>
+              <strong>Set the week</strong>
+              <p>Choose free hours and balance the three buckets.</p>
+            </div>
+          </li>
+          <li id="step-interests" class="journey-step">
+            <span class="journey-step-index">02</span>
+            <div>
+              <strong>List your interests</strong>
+              <p>Add the pursuits competing for your time.</p>
+            </div>
+          </li>
+          <li id="step-results" class="journey-step">
+            <span class="journey-step-index">03</span>
+            <div>
+              <strong>Read the allocation</strong>
+              <p>Inspect the outcome and adjust with intent.</p>
+            </div>
+          </li>
+        </ol>
+        <p id="journey-status-tip" class="journey-tip">Tip: the strongest result comes from using a realistic weekly number, not an idealized one.</p>
+      </aside>
     </header>
 
-    <section class="panel" aria-labelledby="setup-heading">
-      <div class="section-copy">
-        <h2 id="setup-heading">Weekly Setup</h2>
-        <p>Set your available time and decide how much of it should go to each bucket.</p>
+    <section id="setup-panel" class="panel step-panel" aria-labelledby="setup-heading">
+      <div class="section-head">
+        <div class="section-copy">
+          <p class="section-step">Step 1</p>
+          <h2 id="setup-heading">Set the weekly foundation</h2>
+          <p>Lock in your available time, then decide how much energy belongs in each bucket.</p>
+        </div>
       </div>
       <div class="field-grid">
         <label class="field">
           <span>Weekly free hours</span>
           <input id="free-hours" type="number" min="0" step="0.5" value="0">
+          <small>Use the hours you can actually control this week, not your best-case fantasy.</small>
         </label>
       </div>
 
       <div class="percentages" id="bucket-controls">
         <div class="subsection-copy">
+          <p class="section-step">Balance the split</p>
           <h3>Bucket percentages</h3>
-          <p>All three buckets should total 100% of your weekly free time.</p>
+          <p>All three buckets should total 100% of your weekly free time before the planner can calculate hours.</p>
         </div>
         <div class="allocation-progress" aria-live="polite">
           <div class="allocation-progress-head">
@@ -44,6 +92,7 @@
         <div class="field-grid field-grid-buckets">
           <label class="field bucket-field bucket-1">
             <span>Bucket 1: Wealth</span>
+            <small>Skill-building, income, leverage, and momentum.</small>
             <div class="bucket-control">
               <input id="bucket-1-range" type="range" min="0" max="100" step="1" value="80">
               <input id="bucket-1" type="number" min="0" max="100" step="1" value="80">
@@ -51,6 +100,7 @@
           </label>
           <label class="field bucket-field bucket-2">
             <span>Bucket 2: Necessary</span>
+            <small>Maintenance, admin, errands, and obligations.</small>
             <div class="bucket-control">
               <input id="bucket-2-range" type="range" min="0" max="100" step="1" value="15">
               <input id="bucket-2" type="number" min="0" max="100" step="1" value="15">
@@ -58,6 +108,7 @@
           </label>
           <label class="field bucket-field bucket-3">
             <span>Bucket 3: Pure interest</span>
+            <small>Curiosity, joy, craft, and unpressured exploration.</small>
             <div class="bucket-control">
               <input id="bucket-3-range" type="range" min="0" max="100" step="1" value="5">
               <input id="bucket-3" type="number" min="0" max="100" step="1" value="5">
@@ -68,11 +119,12 @@
       </div>
     </section>
 
-    <section class="panel" aria-labelledby="interests-heading">
+    <section id="interests-panel" class="panel step-panel" aria-labelledby="interests-heading">
       <div class="section-head">
         <div class="section-copy">
-          <h2 id="interests-heading">Interests</h2>
-          <p>Add the things you want to spend time on, then assign a weight to show relative importance inside each bucket.</p>
+          <p class="section-step">Step 2</p>
+          <h2 id="interests-heading">Add the interests competing for time</h2>
+          <p>Turn your buckets into real tradeoffs by naming what belongs inside them and weighting each one by importance.</p>
         </div>
         <button id="reset-button" type="button" class="button button-ghost button-danger">Reset all data</button>
       </div>
@@ -95,7 +147,7 @@
           <label class="field">
             <span>Weight</span>
             <input id="interest-weight" type="number" min="0.1" step="0.1" value="1">
-            <small>Higher weight means this interest gets a larger share of its bucket.</small>
+            <small>Higher weight gives this interest more of its bucket's weekly hours.</small>
           </label>
         </div>
         <div class="actions">
@@ -126,12 +178,13 @@
       </div>
     </section>
 
-    <section class="panel panel-results" aria-labelledby="results-heading">
+    <section id="results-panel" class="panel panel-results step-panel" aria-labelledby="results-heading">
       <div class="section-copy">
-        <h2 id="results-heading">Weekly Allocation</h2>
-        <p>Your bucket summary is shown first, followed by the exact hours assigned to each interest.</p>
+        <p class="section-step">Step 3</p>
+        <h2 id="results-heading">Read the weekly allocation</h2>
+        <p>The summary tells the story of the week first, then the cards and table show where every hour lands.</p>
       </div>
-      <p id="allocation-summary" class="summary-line" aria-live="polite"></p>
+      <p id="allocation-summary" class="summary-line" aria-live="polite" tabindex="-1"></p>
       <div id="bucket-results" class="results-grid"></div>
 
       <div class="table-wrap">
