@@ -124,7 +124,7 @@
         <div class="section-copy">
           <p class="section-step">Step 2</p>
           <h2 id="priorities-heading">Add the priorities competing for time</h2>
-          <p>Name the commitments inside each category, then weight them by strategic importance.</p>
+          <p>Name the commitments inside each category, then weight them with a simple relative scale.</p>
         </div>
         <button id="reset-button" type="button" class="button button-ghost button-danger">Reset all data</button>
       </div>
@@ -148,9 +148,10 @@
             <div class="field-label-row">
               <label for="priority-weight" class="field-label">Weight</label>
               <span class="info-tip" tabindex="0" aria-label="Weight guidance" aria-describedby="weight-help">i</span>
-              <small id="weight-help" class="field-tooltip" role="tooltip">Higher weight gives this priority more of its category's weekly hours.</small>
+              <small id="weight-help" class="field-tooltip" role="tooltip">Use 1 as baseline, 2 for important work, and 3 for critical work. Higher numbers receive more category hours.</small>
             </div>
             <input id="priority-weight" type="number" min="0.1" step="0.1" value="1">
+            <small>1 is baseline. 2 is important. 3 is critical.</small>
           </div>
         </div>
         <div class="actions">

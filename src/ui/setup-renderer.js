@@ -10,8 +10,8 @@ const JOURNEY_COPY = {
   priorities: {
     title: 'Add the priorities competing for time.',
     detail: 'Name the growth work, operations, and renewal commitments drawing from the same weekly pool.',
-    tip: 'Weight each priority by its importance inside the category, not by habit or urgency alone.',
-    onboarding: 'Add the priorities you want to compare, then weight them to see how each category divides.'
+    tip: 'Use 1 as baseline, 2 for important work, and 3 for critical work inside a category.',
+    onboarding: 'Add the priorities you want to compare, then weight them with a simple relative scale.'
   },
   results: {
     title: 'Review the weekly allocation.',

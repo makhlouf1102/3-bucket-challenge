@@ -57,7 +57,7 @@ export function renderPriorityForm({ elements, plannerState, model, uiState, mes
   const draft = buildDraftPriority(elements);
   const helperMessage = message || (uiState.editingPriorityId
     ? 'You are editing a saved priority. Update the details, then review the allocation.'
-    : 'Add a priority, choose a category, and set a weight to preview the allocation.');
+    : 'Add a priority, choose a category, and use 1, 2, or 3 to preview the allocation.');
   setMessage(elements.priorityMessage, helperMessage, Boolean(messageIsError), uiState.reducedMotion);
 
   if (!draft.name && !uiState.editingPriorityId) {
@@ -96,6 +96,6 @@ export function renderPriorityForm({ elements, plannerState, model, uiState, mes
   elements.priorityPreview.innerHTML = [
     '<span class="preview-label">Live preview</span>',
     `<strong class="preview-hours">${formatHours(model.preview.hours)}</strong>`,
-    `<span class="preview-meta">${draft.categoryLabel} at weight ${formatNumber(draft.weight)}. ${deltaText}</span>`
+    `<span class="preview-meta">${draft.categoryLabel}, weight ${formatNumber(draft.weight)}. ${deltaText}</span>`
   ].join('');
 }
