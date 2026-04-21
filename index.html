@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Plan your weekly free time across wealth, necessary, and pure-interest buckets with weighted allocations.">
-  <title>Three Bucket Planner</title>
+  <meta name="description" content="Plan your weekly founder time across growth, operations, and renewal priorities with weighted allocations.">
+  <title>Three Category Planner</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="page page-shell">
     <header class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Weekly time planning</p>
-        <p class="hero-kicker">Intentional hours, not accidental leftovers.</p>
-        <h1>Three Bucket Planner</h1>
-        <p class="lede">Shape your week in three moves: define your available hours, split them across the buckets that matter, then see exactly where your attention lands.</p>
-        <p id="hero-onboarding" class="hero-onboarding">Start with a realistic number of free hours. The planner will guide you from setup to allocation as soon as the split is valid.</p>
+        <p class="eyebrow">Founder time planning</p>
+        <p class="hero-kicker">Treat the week like a portfolio.</p>
+        <h1>Three Category Planner</h1>
+        <p class="lede">Set your available founder hours, divide them across strategic categories, then see where your attention will compound this week.</p>
+        <p id="hero-onboarding" class="hero-onboarding">Start with the hours you can truly direct. The planner opens the allocation view once your split reaches 100%.</p>
       </div>
 
       <aside class="journey-card" aria-labelledby="journey-title">
         <p id="journey-status-label" class="journey-label">Step 1 of 3</p>
-        <h2 id="journey-title">Set your weekly rhythm.</h2>
-        <p id="journey-status-detail" class="journey-detail">Start by entering the number of free hours you can actually direct this week.</p>
+        <h2 id="journey-title">Set the operating week.</h2>
+        <p id="journey-status-detail" class="journey-detail">Enter the hours you can deliberately allocate this week.</p>
         <div class="journey-progress" aria-live="polite">
           <div class="journey-progress-head">
             <strong>Progress</strong>
@@ -31,30 +31,30 @@
             <div id="journey-progress-bar" class="journey-progress-bar"></div>
           </div>
         </div>
-        <ol class="journey-steps" aria-label="Planner steps">
+        <ol class="journey-steps" aria-label="Planning steps">
           <li id="step-setup" class="journey-step is-current">
             <span class="journey-step-index">01</span>
             <div>
-              <strong>Set the week</strong>
-              <p>Choose free hours and balance the three buckets.</p>
+              <strong>Set capacity</strong>
+              <p>Choose available hours and balance the three categories.</p>
             </div>
           </li>
-          <li id="step-interests" class="journey-step">
+          <li id="step-priorities" class="journey-step">
             <span class="journey-step-index">02</span>
             <div>
-              <strong>List your interests</strong>
-              <p>Add the pursuits competing for your time.</p>
+              <strong>Name priorities</strong>
+              <p>Add the commitments competing for your attention.</p>
             </div>
           </li>
           <li id="step-results" class="journey-step">
             <span class="journey-step-index">03</span>
             <div>
-              <strong>Read the allocation</strong>
-              <p>Inspect the outcome and adjust with intent.</p>
+              <strong>Review the plan</strong>
+              <p>Inspect the allocation and adjust with intent.</p>
             </div>
           </li>
         </ol>
-        <p id="journey-status-tip" class="journey-tip">Tip: the strongest result comes from using a realistic weekly number, not an idealized one.</p>
+        <p id="journey-status-tip" class="journey-tip">Tip: use the week you can actually run, not the week you wish you had.</p>
       </aside>
     </header>
 
@@ -62,23 +62,23 @@
       <div class="section-head">
         <div class="section-copy">
           <p class="section-step">Step 1</p>
-          <h2 id="setup-heading">Set the weekly foundation</h2>
-          <p>Lock in your available time, then decide how much energy belongs in each bucket.</p>
+          <h2 id="setup-heading">Set weekly capacity</h2>
+          <p>Define the hours you can direct, then decide how they should serve the business and the founder behind it.</p>
         </div>
       </div>
       <div class="field-grid">
         <label class="field">
-          <span>Weekly free hours</span>
+          <span>Available founder hours</span>
           <input id="free-hours" type="number" min="0" step="0.5" value="0">
-          <small>Use the hours you can actually control this week, not your best-case fantasy.</small>
+          <small>Use only the discretionary hours you can protect this week.</small>
         </label>
       </div>
 
-      <div class="percentages" id="bucket-controls">
+      <div class="percentages" id="category-controls">
         <div class="subsection-copy">
-          <p class="section-step">Balance the split</p>
-          <h3>Bucket percentages</h3>
-          <p>All three buckets should total 100% of your weekly free time before the planner can calculate hours.</p>
+          <p class="section-step">Balance the portfolio</p>
+          <h3>Category percentages</h3>
+          <p>The three categories must total 100% before the planner can calculate your hours.</p>
         </div>
         <div class="allocation-progress" aria-live="polite">
           <div class="allocation-progress-head">
@@ -89,29 +89,29 @@
             <div id="allocation-progress-bar" class="allocation-progress-bar"></div>
           </div>
         </div>
-        <div class="field-grid field-grid-buckets">
-          <label class="field bucket-field bucket-1">
-            <span>Bucket 1: Wealth</span>
-            <small>Skill-building, income, leverage, and momentum.</small>
-            <div class="bucket-control">
-              <input id="bucket-1-range" type="range" min="0" max="100" step="1" value="80">
-              <input id="bucket-1" type="number" min="0" max="100" step="1" value="80">
+        <div class="field-grid field-grid-categories">
+          <label class="field category-field category-1">
+            <span>Growth engine</span>
+            <small>Revenue, product leverage, sales, learning, and strategic momentum.</small>
+            <div class="category-control">
+              <input id="category-1-range" type="range" min="0" max="100" step="1" value="80">
+              <input id="category-1" type="number" min="0" max="100" step="1" value="80">
             </div>
           </label>
-          <label class="field bucket-field bucket-2">
-            <span>Bucket 2: Necessary</span>
-            <small>Maintenance, admin, errands, and obligations.</small>
-            <div class="bucket-control">
-              <input id="bucket-2-range" type="range" min="0" max="100" step="1" value="15">
-              <input id="bucket-2" type="number" min="0" max="100" step="1" value="15">
+          <label class="field category-field category-2">
+            <span>Operations</span>
+            <small>Admin, maintenance, delivery, finance, and obligations that keep the business sound.</small>
+            <div class="category-control">
+              <input id="category-2-range" type="range" min="0" max="100" step="1" value="15">
+              <input id="category-2" type="number" min="0" max="100" step="1" value="15">
             </div>
           </label>
-          <label class="field bucket-field bucket-3">
-            <span>Bucket 3: Pure interest</span>
-            <small>Curiosity, joy, craft, and unpressured exploration.</small>
-            <div class="bucket-control">
-              <input id="bucket-3-range" type="range" min="0" max="100" step="1" value="5">
-              <input id="bucket-3" type="number" min="0" max="100" step="1" value="5">
+          <label class="field category-field category-3">
+            <span>Renewal</span>
+            <small>Health, reflection, craft, curiosity, and space that protects long-term judgment.</small>
+            <div class="category-control">
+              <input id="category-3-range" type="range" min="0" max="100" step="1" value="5">
+              <input id="category-3" type="number" min="0" max="100" step="1" value="5">
             </div>
           </label>
         </div>
@@ -119,59 +119,62 @@
       </div>
     </section>
 
-    <section id="interests-panel" class="panel step-panel" aria-labelledby="interests-heading">
+    <section id="priorities-panel" class="panel step-panel" aria-labelledby="priorities-heading">
       <div class="section-head">
         <div class="section-copy">
           <p class="section-step">Step 2</p>
-          <h2 id="interests-heading">Add the interests competing for time</h2>
-          <p>Turn your buckets into real tradeoffs by naming what belongs inside them and weighting each one by importance.</p>
+          <h2 id="priorities-heading">Add the priorities competing for time</h2>
+          <p>Name the commitments inside each category, then weight them by strategic importance.</p>
         </div>
         <button id="reset-button" type="button" class="button button-ghost button-danger">Reset all data</button>
       </div>
 
-      <form id="interest-form" class="interest-form">
-        <input id="interest-id" type="hidden">
+      <form id="priority-form" class="priority-form">
+        <input id="priority-id" type="hidden">
         <div class="field-grid">
           <label class="field">
-            <span>Interest name</span>
-            <input id="interest-name" type="text" maxlength="80" placeholder="Example: Learning sales">
+            <span>Priority name</span>
+            <input id="priority-name" type="text" maxlength="80" placeholder="Example: Improve sales calls">
           </label>
           <label class="field">
-            <span>Bucket</span>
-            <select id="interest-bucket">
-              <option value="1">Bucket 1: Wealth</option>
-              <option value="2">Bucket 2: Necessary</option>
-              <option value="3">Bucket 3: Pure interest</option>
+            <span>Category</span>
+            <select id="priority-category">
+              <option value="1">Growth engine</option>
+              <option value="2">Operations</option>
+              <option value="3">Renewal</option>
             </select>
           </label>
-          <label class="field">
-            <span>Weight</span>
-            <input id="interest-weight" type="number" min="0.1" step="0.1" value="1">
-            <small>Higher weight gives this interest more of its bucket's weekly hours.</small>
-          </label>
+          <div class="field">
+            <div class="field-label-row">
+              <label for="priority-weight" class="field-label">Weight</label>
+              <span class="info-tip" tabindex="0" aria-label="Weight guidance" aria-describedby="weight-help">i</span>
+              <small id="weight-help" class="field-tooltip" role="tooltip">Higher weight gives this priority more of its category's weekly hours.</small>
+            </div>
+            <input id="priority-weight" type="number" min="0.1" step="0.1" value="1">
+          </div>
         </div>
         <div class="actions">
-          <button id="save-interest" type="submit" class="button">Save interest</button>
+          <button id="save-priority" type="submit" class="button">Save priority</button>
           <button id="cancel-edit" type="button" class="button button-ghost" hidden>Cancel edit</button>
         </div>
-        <p id="interest-message" class="message" aria-live="polite"></p>
-        <div id="interest-preview" class="preview-card" aria-live="polite" hidden></div>
+        <p id="priority-message" class="message" aria-live="polite"></p>
+        <div id="priority-preview" class="preview-card" aria-live="polite" hidden></div>
       </form>
 
       <div class="table-wrap">
         <table class="data-table">
-          <caption class="sr-only">Current interests and their assigned buckets</caption>
+          <caption class="sr-only">Current priorities and their assigned categories</caption>
           <thead>
             <tr>
-              <th scope="col">Interest</th>
-              <th scope="col">Bucket</th>
+              <th scope="col">Priority</th>
+              <th scope="col">Category</th>
               <th scope="col">Weight</th>
               <th scope="col">Actions</th>
             </tr>
           </thead>
-          <tbody id="interest-list">
+          <tbody id="priority-list">
             <tr>
-              <td colspan="4">No interests added yet.</td>
+              <td colspan="4">No priorities added yet.</td>
             </tr>
           </tbody>
         </table>
@@ -181,26 +184,26 @@
     <section id="results-panel" class="panel panel-results step-panel" aria-labelledby="results-heading">
       <div class="section-copy">
         <p class="section-step">Step 3</p>
-        <h2 id="results-heading">Read the weekly allocation</h2>
-        <p>The summary tells the story of the week first, then the cards and table show where every hour lands.</p>
+        <h2 id="results-heading">Review the weekly allocation</h2>
+        <p>Start with the summary, then use the cards and table to see where every hour lands.</p>
       </div>
       <p id="allocation-summary" class="summary-line" aria-live="polite" tabindex="-1"></p>
-      <div id="bucket-results" class="results-grid"></div>
+      <div id="category-results" class="results-grid"></div>
 
       <div class="table-wrap">
         <table class="data-table">
-          <caption class="sr-only">Per-interest weekly allocation</caption>
+          <caption class="sr-only">Per-priority weekly allocation</caption>
           <thead>
             <tr>
-              <th scope="col">Interest</th>
-              <th scope="col">Bucket</th>
+              <th scope="col">Priority</th>
+              <th scope="col">Category</th>
               <th scope="col">Weight</th>
               <th scope="col">Hours per week</th>
             </tr>
           </thead>
           <tbody id="allocation-list">
             <tr>
-              <td colspan="4">Add interests to see per-interest hours.</td>
+              <td colspan="4">Add priorities to see hours by priority.</td>
             </tr>
           </tbody>
         </table>

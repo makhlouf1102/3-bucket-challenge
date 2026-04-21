@@ -69,8 +69,8 @@ function withFakeWindow(callback) {
 function createPlannerState(overrides = {}) {
   return {
     freeHours: 0,
-    bucketPercentages: { '1': 80, '2': 15, '3': 5 },
-    interests: [],
+    categoryPercentages: { '1': 80, '2': 15, '3': 5 },
+    priorities: [],
     ...overrides
   };
 }
@@ -90,10 +90,10 @@ export function registerUiTests(run) {
     withFakeWindow(({ flushFrames }) => {
       const element = createFakeElement();
 
-      setMessage(element, '100% allocated across all three buckets.', false, false);
+      setMessage(element, '100% allocated across all three categories.', false, false);
       flushFrames();
 
-      assert.equal(element.textContent, '100% allocated across all three buckets.');
+      assert.equal(element.textContent, '100% allocated across all three categories.');
       assert.equal(element.classList.contains('error'), false);
       assert.equal(element.classList.contains('message-pop'), true);
     });
@@ -103,11 +103,11 @@ export function registerUiTests(run) {
     withFakeWindow(({ flushFrames }) => {
       const element = createFakeElement();
 
-      setMessage(element, '100% allocated across all three buckets.', false, false);
+      setMessage(element, '100% allocated across all three categories.', false, false);
       flushFrames();
       element.classList.remove('message-pop');
 
-      setMessage(element, '100% allocated across all three buckets.', false, false);
+      setMessage(element, '100% allocated across all three categories.', false, false);
       flushFrames();
 
       assert.equal(element.classList.contains('message-pop'), false);
@@ -118,7 +118,7 @@ export function registerUiTests(run) {
     withFakeWindow(({ flushFrames }) => {
       const element = createFakeElement();
 
-      setMessage(element, '100% allocated across all three buckets.', false, false);
+      setMessage(element, '100% allocated across all three categories.', false, false);
       flushFrames();
       element.classList.remove('message-pop');
 
@@ -165,25 +165,25 @@ export function registerUiTests(run) {
     const setupStatus = buildJourneyStatus({
       plannerState: createPlannerState(),
       model: { isPercentageValid: false, allocations: [] },
-      uiState: { editingInterestId: '', journeyStage: 'setup' }
+      uiState: { editingPriorityId: '', journeyStage: 'setup' }
     });
-    const interestStatus = buildJourneyStatus({
-      plannerState: createPlannerState({ freeHours: 12, bucketPercentages: { '1': 50, '2': 30, '3': 20 } }),
+    const priorityStatus = buildJourneyStatus({
+      plannerState: createPlannerState({ freeHours: 12, categoryPercentages: { '1': 50, '2': 30, '3': 20 } }),
       model: { isPercentageValid: true, allocations: [] },
-      uiState: { editingInterestId: '', journeyStage: 'setup' }
+      uiState: { editingPriorityId: '', journeyStage: 'setup' }
     });
     const resultStatus = buildJourneyStatus({
       plannerState: createPlannerState({
         freeHours: 12,
-        bucketPercentages: { '1': 50, '2': 30, '3': 20 },
-        interests: [{ id: 'a', name: 'Reading', bucket: '3', weight: 1 }]
+        categoryPercentages: { '1': 50, '2': 30, '3': 20 },
+        priorities: [{ id: 'a', name: 'Reading', category: '3', weight: 1 }]
       }),
       model: { isPercentageValid: true, allocations: [{ id: 'a' }] },
-      uiState: { editingInterestId: '', journeyStage: 'setup' }
+      uiState: { editingPriorityId: '', journeyStage: 'setup' }
     });
 
     assert.equal(setupStatus.stage, 'setup');
-    assert.equal(interestStatus.stage, 'interests');
+    assert.equal(priorityStatus.stage, 'priorities');
     assert.equal(resultStatus.stage, 'results');
     assert.equal(resultStatus.progressValue, '3/3');
   });

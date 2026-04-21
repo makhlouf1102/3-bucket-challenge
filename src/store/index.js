@@ -2,7 +2,7 @@ export {
   clearPlannerState,
   createDefaultPlannerState,
   loadPlannerState,
-  sanitizeInterest,
+  sanitizePriority,
   sanitizePlannerState,
   savePlannerState
 } from './local-storage-store.js';

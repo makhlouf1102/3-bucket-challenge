@@ -6,7 +6,7 @@ export function parseNonNegativeNumber(value, fallback) {
   return fallback;
 }
 
-export function parseBucketPercentage(value, fallback) {
+export function parseCategoryPercentage(value, fallback) {
   const parsed = Number(value);
   if (Number.isFinite(parsed) && parsed >= 0) {
     return Math.min(parsed, 100);

@@ -1,9 +1,10 @@
 export {
+  buildCategoryStatus,
   buildPercentageMessage,
   derivePlannerModel,
-  getBucketName,
-  getInterestHours,
-  getInterestPreview,
+  getCategoryName,
+  getPriorityHours,
+  getPriorityPreview,
   getPercentageTotal,
   validatePlannerState
 } from './planner-domain.js';

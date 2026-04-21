@@ -1,28 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { derivePlannerModel, getInterestPreview, validatePlannerState } from '../src/domain/index.js';
+import { derivePlannerModel, getPriorityPreview, validatePlannerState } from '../src/domain/index.js';
 import {
-  buildBucketStatus,
+  buildCategoryStatus,
   buildPercentageMessage,
   buildSummaryText
 } from '../src/domain/planner-domain.js';
 
 const plannerState = {
   freeHours: 20,
-  bucketPercentages: { '1': 50, '2': 30, '3': 20 },
-  interests: [
-    { id: 'a', name: 'Sales', bucket: '1', weight: 3 },
-    { id: 'b', name: 'Coding', bucket: '1', weight: 1 },
-    { id: 'c', name: 'Fitness', bucket: '2', weight: 2 }
+  categoryPercentages: { '1': 50, '2': 30, '3': 20 },
+  priorities: [
+    { id: 'a', name: 'Sales', category: '1', weight: 3 },
+    { id: 'b', name: 'Coding', category: '1', weight: 1 },
+    { id: 'c', name: 'Fitness', category: '2', weight: 2 }
   ]
 };
 
 const uiState = {
-  editingInterestId: '',
-  expandedBucketId: '',
-  lastChangedInterestId: '',
-  lastDeletedInterestId: '',
+  editingPriorityId: '',
+  expandedCategoryId: '',
+  lastChangedPriorityId: '',
+  lastDeletedPriorityId: '',
   previousAllocations: new Map(),
   summaryText: '',
   reducedMotion: true
@@ -45,13 +45,13 @@ test('derivePlannerModel allocates weighted hours correctly', () => {
   assert.equal(coding.hours, 2.5);
 });
 
-test('getInterestPreview compares a draft edit against the saved allocation', () => {
-  const preview = getInterestPreview(plannerState, {
+test('getPriorityPreview compares a draft edit against the saved allocation', () => {
+  const preview = getPriorityPreview(plannerState, {
     id: 'a',
     existingId: 'a',
     name: 'Sales',
-    bucket: '1',
-    bucketLabel: 'Bucket 1: Wealth',
+    category: '1',
+    categoryLabel: 'Growth engine',
     weight: 2
   });
 
@@ -60,8 +60,8 @@ test('getInterestPreview compares a draft edit against the saved allocation', ()
 });
 
 test('copy helpers describe the guided weekly flow', () => {
-  assert.equal(buildBucketStatus({ interests: [] }, 90), 'Complete the 100% split to unlock this bucket breakdown.');
-  assert.equal(buildPercentageMessage(100), 'All three buckets total 100%.');
+  assert.equal(buildCategoryStatus({ priorities: [] }, 90), 'Bring the category split to 100% to unlock this breakdown.');
+  assert.equal(buildPercentageMessage(100), 'Your category portfolio totals 100%.');
   assert.equal(
     buildSummaryText([{ id: 'a', name: 'Sales', hours: 8 }], new Map(), 100),
     'Sales currently leads your week at 8 hours.'

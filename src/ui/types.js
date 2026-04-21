@@ -1,10 +1,10 @@
 /**
  * @typedef {Object} UiState
- * @property {string} editingInterestId
- * @property {string} expandedBucketId
- * @property {string} lastChangedInterestId
- * @property {string} lastDeletedInterestId
- * @property {'setup' | 'interests' | 'results'} journeyStage
+ * @property {string} editingPriorityId
+ * @property {string} expandedCategoryId
+ * @property {string} lastChangedPriorityId
+ * @property {string} lastDeletedPriorityId
+ * @property {'setup' | 'priorities' | 'results'} journeyStage
  * @property {string} pendingFocusTarget
  * @property {Map<string, number>} previousAllocations
  * @property {string} summaryText
@@ -20,10 +20,10 @@
 
 export function createDefaultUiState() {
   return {
-    editingInterestId: '',
-    expandedBucketId: '',
-    lastChangedInterestId: '',
-    lastDeletedInterestId: '',
+    editingPriorityId: '',
+    expandedCategoryId: '',
+    lastChangedPriorityId: '',
+    lastDeletedPriorityId: '',
     journeyStage: 'setup',
     pendingFocusTarget: '',
     previousAllocations: new Map(),

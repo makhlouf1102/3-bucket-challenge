@@ -5,7 +5,7 @@ import {
   loadPlannerState,
   sanitizePlannerState
 } from '../src/store/index.js';
-import { derivePlannerModel, getInterestPreview, validatePlannerState } from '../src/domain/index.js';
+import { derivePlannerModel, getPriorityPreview, validatePlannerState } from '../src/domain/index.js';
 import { ACTIONS, createPlannerDispatcher } from '../src/actions/index.js';
 import { registerUiTests } from './ui.test.js';
 
@@ -23,26 +23,26 @@ function run(name, fn) {
 run('store defaults', () => {
   assert.deepEqual(createDefaultPlannerState(), {
     freeHours: 0,
-    bucketPercentages: { '1': 80, '2': 15, '3': 5 },
-    interests: []
+    categoryPercentages: { '1': 80, '2': 15, '3': 5 },
+    priorities: []
   });
 });
 
 run('store sanitization', () => {
   const state = sanitizePlannerState({
     freeHours: -5,
-    bucketPercentages: { '1': 200, '2': '15', '3': 5 },
-    interests: [
-      { id: 'a', name: ' Writing ', bucket: '1', weight: 2 },
-      { id: 'b', name: '', bucket: '2', weight: 1 },
-      { id: 'c', name: 'Bad', bucket: '9', weight: 1 }
+    categoryPercentages: { '1': 200, '2': '15', '3': 5 },
+    priorities: [
+      { id: 'a', name: ' Writing ', category: '1', weight: 2 },
+      { id: 'b', name: '', category: '2', weight: 1 },
+      { id: 'c', name: 'Bad', category: '9', weight: 1 }
     ]
   });
 
   assert.equal(state.freeHours, 0);
-  assert.deepEqual(state.bucketPercentages, { '1': 100, '2': 15, '3': 5 });
-  assert.equal(state.interests.length, 1);
-  assert.equal(state.interests[0].name, 'Writing');
+  assert.deepEqual(state.categoryPercentages, { '1': 100, '2': 15, '3': 5 });
+  assert.equal(state.priorities.length, 1);
+  assert.equal(state.priorities[0].name, 'Writing');
 });
 
 run('store load fallback', () => {
@@ -57,19 +57,19 @@ run('store load fallback', () => {
 
 const plannerState = {
   freeHours: 20,
-  bucketPercentages: { '1': 50, '2': 30, '3': 20 },
-  interests: [
-    { id: 'a', name: 'Sales', bucket: '1', weight: 3 },
-    { id: 'b', name: 'Coding', bucket: '1', weight: 1 },
-    { id: 'c', name: 'Fitness', bucket: '2', weight: 2 }
+  categoryPercentages: { '1': 50, '2': 30, '3': 20 },
+  priorities: [
+    { id: 'a', name: 'Sales', category: '1', weight: 3 },
+    { id: 'b', name: 'Coding', category: '1', weight: 1 },
+    { id: 'c', name: 'Fitness', category: '2', weight: 2 }
   ]
 };
 
 const uiState = {
-  editingInterestId: '',
-  expandedBucketId: '',
-  lastChangedInterestId: '',
-  lastDeletedInterestId: '',
+  editingPriorityId: '',
+  expandedCategoryId: '',
+  lastChangedPriorityId: '',
+  lastDeletedPriorityId: '',
   previousAllocations: new Map(),
   summaryText: '',
   reducedMotion: true
@@ -93,12 +93,12 @@ run('domain weighted allocations', () => {
 });
 
 run('domain preview delta', () => {
-  const preview = getInterestPreview(plannerState, {
+  const preview = getPriorityPreview(plannerState, {
     id: 'a',
     existingId: 'a',
     name: 'Sales',
-    bucket: '1',
-    bucketLabel: 'Bucket 1: Wealth',
+    category: '1',
+    categoryLabel: 'Growth engine',
     weight: 2
   });
 
@@ -133,12 +133,12 @@ run('actions persist on save', () => {
   });
 
   const result = dispatch({
-    type: ACTIONS.SAVE_INTEREST,
-    payload: { id: '', name: 'Reading', bucket: '3', weight: '2' }
+    type: ACTIONS.SAVE_PRIORITY,
+    payload: { id: '', name: 'Reading', category: '3', weight: '2' }
   });
 
   assert.equal(result.ok, true);
-  assert.equal(state.plannerState.interests.length, 1);
+  assert.equal(state.plannerState.priorities.length, 1);
   assert.equal(persisted[0].type, 'save');
   assert.equal(renderCount, 1);
 });
@@ -147,8 +147,8 @@ run('actions clear on reset', () => {
   const state = {
     plannerState: {
       freeHours: 2,
-      bucketPercentages: { '1': 80, '2': 15, '3': 5 },
-      interests: [{ id: 'a', name: 'Reading', bucket: '3', weight: 2 }]
+      categoryPercentages: { '1': 80, '2': 15, '3': 5 },
+      priorities: [{ id: 'a', name: 'Reading', category: '3', weight: 2 }]
     },
     uiState: { ...uiState, previousAllocations: new Map() }
   };
@@ -171,7 +171,7 @@ run('actions clear on reset', () => {
   });
 
   dispatch({ type: ACTIONS.RESET_PLANNER });
-  assert.deepEqual(state.plannerState.interests, []);
+  assert.deepEqual(state.plannerState.priorities, []);
   assert.equal(persisted[0].type, 'clear');
 });
 

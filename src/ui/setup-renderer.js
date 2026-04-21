@@ -2,22 +2,22 @@ import { formatNumber } from '../lib/format.js';
 
 const JOURNEY_COPY = {
   setup: {
-    title: 'Set your weekly rhythm.',
-    detail: 'Enter free hours and bring the bucket split to 100% so the planner can calculate the week.',
-    tip: 'A realistic split beats an optimistic one. Use the hours you can actually direct.',
-    onboarding: 'Start with your available hours and a realistic bucket split. The rest of the planner unlocks once the total reaches 100%.'
+    title: 'Set the operating week.',
+    detail: 'Enter available founder hours and bring the category split to 100% so the planner can calculate the week.',
+    tip: 'A realistic allocation beats an optimistic one. Use the hours you can actually protect.',
+    onboarding: 'Start with your available founder hours and a realistic category split. The allocation view opens once the total reaches 100%.'
   },
-  interests: {
-    title: 'Add the interests competing for time.',
-    detail: 'Name the work, obligations, and curiosities that are drawing from the same weekly pool.',
-    tip: 'Weight each interest by importance inside its bucket, not by how often you want to see it.',
-    onboarding: 'Add the interests you want to compare, then weight them to see how the bucket divides.'
+  priorities: {
+    title: 'Add the priorities competing for time.',
+    detail: 'Name the growth work, operations, and renewal commitments drawing from the same weekly pool.',
+    tip: 'Weight each priority by its importance inside the category, not by habit or urgency alone.',
+    onboarding: 'Add the priorities you want to compare, then weight them to see how each category divides.'
   },
   results: {
-    title: 'Read the weekly allocation.',
-    detail: 'Review the bucket cards and open any one of them to see the split inside that bucket.',
-    tip: 'The overview is the summary. Expand a card when you want the details.',
-    onboarding: 'Your week is ready to inspect. Review the summary first, then expand buckets for the finer split.'
+    title: 'Review the weekly allocation.',
+    detail: 'Review the category cards and open any one of them to see the split inside that category.',
+    tip: 'Use the summary for the decision. Expand a card when you need the detail.',
+    onboarding: 'Your week is ready to inspect. Review the summary first, then expand categories for the finer split.'
   }
 };
 
@@ -26,8 +26,8 @@ function getJourneyStage(plannerState, model, uiState) {
     return 'setup';
   }
 
-  if (uiState.editingInterestId || plannerState.interests.length === 0) {
-    return 'interests';
+  if (uiState.editingPriorityId || plannerState.priorities.length === 0) {
+    return 'priorities';
   }
 
   return 'results';
@@ -38,7 +38,7 @@ function getStageProgress(stage) {
     return 1;
   }
 
-  if (stage === 'interests') {
+  if (stage === 'priorities') {
     return 2 / 3;
   }
 
@@ -47,7 +47,7 @@ function getStageProgress(stage) {
 
 export function buildJourneyStatus({ plannerState, model, uiState }) {
   const stage = getJourneyStage(plannerState, model, uiState);
-  const progressValue = stage === 'setup' ? '1/3' : stage === 'interests' ? '2/3' : '3/3';
+  const progressValue = stage === 'setup' ? '1/3' : stage === 'priorities' ? '2/3' : '3/3';
   const copy = JOURNEY_COPY[stage];
 
   return {
@@ -58,20 +58,20 @@ export function buildJourneyStatus({ plannerState, model, uiState }) {
     detail: copy.detail,
     tip: copy.tip,
     onboarding: copy.onboarding,
-    label: stage === 'setup' ? 'Step 1 of 3' : stage === 'interests' ? 'Step 2 of 3' : 'Step 3 of 3'
+    label: stage === 'setup' ? 'Step 1 of 3' : stage === 'priorities' ? 'Step 2 of 3' : 'Step 3 of 3'
   };
 }
 
 function updateJourneySteps(elements, stage) {
   const orderedSteps = [
     { element: elements.stepSetup, id: 'setup' },
-    { element: elements.stepInterests, id: 'interests' },
+    { element: elements.stepPriorities, id: 'priorities' },
     { element: elements.stepResults, id: 'results' }
   ];
 
   orderedSteps.forEach((step, index) => {
     const isCurrent = step.id === stage;
-    const isComplete = (stage === 'interests' && index === 0) || (stage === 'results' && index < 2);
+    const isComplete = (stage === 'priorities' && index === 0) || (stage === 'results' && index < 2);
     step.element.classList.toggle('is-current', isCurrent);
     step.element.classList.toggle('is-complete', isComplete);
     step.element.classList.toggle('is-next', !isCurrent && !isComplete);
@@ -125,20 +125,20 @@ export function renderSetup({ elements, plannerState, model, uiState }) {
   renderJourneyStatus({ elements: elements.journey, plannerState, model, uiState });
 
   elements.freeHours.value = String(plannerState.freeHours);
-  Object.entries(elements.bucketInputs).forEach(([bucketId, input]) => {
-    const value = String(plannerState.bucketPercentages[bucketId]);
+  Object.entries(elements.categoryInputs).forEach(([categoryId, input]) => {
+    const value = String(plannerState.categoryPercentages[categoryId]);
     input.value = value;
-    elements.bucketRanges[bucketId].value = value;
-    elements.bucketRanges[bucketId].setAttribute('aria-valuenow', value);
+    elements.categoryRanges[categoryId].value = value;
+    elements.categoryRanges[categoryId].setAttribute('aria-valuenow', value);
   });
 
   const progressRatio = Math.min(model.percentageTotal, 100) / 100;
   elements.allocationTotal.textContent = `${formatNumber(model.percentageTotal)}%`;
   elements.allocationProgress.style.transform = `scaleX(${progressRatio})`;
-  elements.bucketControls.querySelector('.allocation-progress').classList.toggle('is-invalid', !model.isPercentageValid);
+  elements.categoryControls.querySelector('.allocation-progress').classList.toggle('is-invalid', !model.isPercentageValid);
 
-  Object.values(elements.bucketInputs).forEach((input) => {
-    input.closest('.bucket-field').classList.toggle('is-invalid', !model.isPercentageValid);
+  Object.values(elements.categoryInputs).forEach((input) => {
+    input.closest('.category-field').classList.toggle('is-invalid', !model.isPercentageValid);
   });
 
   setMessage(elements.percentageMessage, model.percentageMessage, !model.isPercentageValid, uiState.reducedMotion);

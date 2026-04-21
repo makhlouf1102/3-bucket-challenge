@@ -1,13 +1,13 @@
-import { BUCKETS } from '../lib/config.js';
+import { CATEGORIES } from '../lib/config.js';
 import { formatHours, formatNumber } from '../lib/format.js';
 
-export function getBucketName(bucketId) {
-  const bucket = BUCKETS.find((item) => item.id === bucketId);
-  return bucket ? bucket.name : 'Unknown bucket';
+export function getCategoryName(categoryId) {
+  const category = CATEGORIES.find((item) => item.id === categoryId);
+  return category ? category.name : 'Unknown category';
 }
 
 export function getPercentageTotal(plannerState) {
-  return Object.values(plannerState.bucketPercentages).reduce((sum, value) => sum + value, 0);
+  return Object.values(plannerState.categoryPercentages).reduce((sum, value) => sum + value, 0);
 }
 
 export function validatePlannerState(plannerState) {
@@ -18,101 +18,101 @@ export function validatePlannerState(plannerState) {
   };
 }
 
-export function getInterestHours(plannerState, targetInterest, interests = plannerState.interests) {
-  const bucketPercentage = plannerState.bucketPercentages[targetInterest.bucket];
-  const bucketHours = (plannerState.freeHours * bucketPercentage) / 100;
-  const targetBucketInterests = interests.filter((interest) => interest.bucket === targetInterest.bucket);
-  const totalWeight = targetBucketInterests.reduce((sum, interest) => sum + interest.weight, 0);
+export function getPriorityHours(plannerState, targetPriority, priorities = plannerState.priorities) {
+  const categoryPercentage = plannerState.categoryPercentages[targetPriority.category];
+  const categoryHours = (plannerState.freeHours * categoryPercentage) / 100;
+  const targetCategoryPriorities = priorities.filter((priority) => priority.category === targetPriority.category);
+  const totalWeight = targetCategoryPriorities.reduce((sum, priority) => sum + priority.weight, 0);
   if (!totalWeight) {
     return 0;
   }
 
-  return bucketHours * (targetInterest.weight / totalWeight);
+  return categoryHours * (targetPriority.weight / totalWeight);
 }
 
-export function getInterestPreview(plannerState, draftInterest) {
-  if (!draftInterest || draftInterest.weight === null || !draftInterest.name) {
+export function getPriorityPreview(plannerState, draftPriority) {
+  if (!draftPriority || draftPriority.weight === null || !draftPriority.name) {
     return null;
   }
 
   const draft = {
-    id: draftInterest.existingId || draftInterest.id,
-    name: draftInterest.name,
-    bucket: draftInterest.bucket,
-    weight: draftInterest.weight
+    id: draftPriority.existingId || draftPriority.id,
+    name: draftPriority.name,
+    category: draftPriority.category,
+    weight: draftPriority.weight
   };
 
-  const draftInterests = draftInterest.existingId
-    ? plannerState.interests.map((interest) => (interest.id === draftInterest.existingId ? draft : interest))
-    : plannerState.interests.concat(draft);
+  const draftPriorities = draftPriority.existingId
+    ? plannerState.priorities.map((priority) => (priority.id === draftPriority.existingId ? draft : priority))
+    : plannerState.priorities.concat(draft);
 
-  const targetBucketInterests = draftInterests.filter((interest) => interest.bucket === draft.bucket);
-  const bucketPercentage = plannerState.bucketPercentages[draft.bucket];
-  const bucketHours = (plannerState.freeHours * bucketPercentage) / 100;
-  const totalWeight = targetBucketInterests.reduce((sum, interest) => sum + interest.weight, 0);
-  const currentAllocation = plannerState.interests.find((interest) => interest.id === draftInterest.existingId);
-  const currentHours = currentAllocation ? getInterestHours(plannerState, currentAllocation) : null;
+  const targetCategoryPriorities = draftPriorities.filter((priority) => priority.category === draft.category);
+  const categoryPercentage = plannerState.categoryPercentages[draft.category];
+  const categoryHours = (plannerState.freeHours * categoryPercentage) / 100;
+  const totalWeight = targetCategoryPriorities.reduce((sum, priority) => sum + priority.weight, 0);
+  const currentAllocation = plannerState.priorities.find((priority) => priority.id === draftPriority.existingId);
+  const currentHours = currentAllocation ? getPriorityHours(plannerState, currentAllocation) : null;
 
   if (!totalWeight) {
     return null;
   }
 
-  const matchingInterest = targetBucketInterests.find((interest) => interest.id === draft.id);
-  if (!matchingInterest) {
+  const matchingPriority = targetCategoryPriorities.find((priority) => priority.id === draft.id);
+  if (!matchingPriority) {
     return null;
   }
 
-  const hours = bucketHours * (matchingInterest.weight / totalWeight);
+  const hours = categoryHours * (matchingPriority.weight / totalWeight);
   return {
     hours,
     delta: currentHours === null ? null : hours - currentHours
   };
 }
 
-export function buildBucketStatus(bucket, percentageTotal) {
+export function buildCategoryStatus(category, percentageTotal) {
   if (percentageTotal !== 100) {
-    return 'Complete the 100% split to unlock this bucket breakdown.';
+    return 'Bring the category split to 100% to unlock this breakdown.';
   }
 
-  if (bucket.interests.length === 0) {
-    return 'No interests assigned yet. Add one to make this bucket active.';
+  if (category.priorities.length === 0) {
+    return 'No priorities assigned yet. Add one to make this category active.';
   }
 
-  if (bucket.interests.length === 1) {
-    return 'This bucket is currently concentrated in a single interest.';
+  if (category.priorities.length === 1) {
+    return 'This category is currently concentrated in one priority.';
   }
 
-  return 'This bucket is split by weight across your saved interests.';
+  return 'This category is split by weight across your saved priorities.';
 }
 
-export function buildBucketAllocation(plannerState, bucket, percentageTotal) {
-  const percentage = plannerState.bucketPercentages[bucket.id];
-  const interests = plannerState.interests.filter((item) => item.bucket === bucket.id);
+export function buildCategoryAllocation(plannerState, category, percentageTotal) {
+  const percentage = plannerState.categoryPercentages[category.id];
+  const priorities = plannerState.priorities.filter((item) => item.category === category.id);
   const hours = percentageTotal === 100 ? (plannerState.freeHours * percentage) / 100 : 0;
-  const totalWeight = interests.reduce((sum, interest) => sum + interest.weight, 0);
+  const totalWeight = priorities.reduce((sum, priority) => sum + priority.weight, 0);
 
-  const allocations = interests.map((interest) => ({
-    id: interest.id,
-    name: interest.name,
-    bucket: interest.bucket,
-    weight: interest.weight,
-    hours: totalWeight === 0 ? 0 : hours * (interest.weight / totalWeight)
+  const allocations = priorities.map((priority) => ({
+    id: priority.id,
+    name: priority.name,
+    category: priority.category,
+    weight: priority.weight,
+    hours: totalWeight === 0 ? 0 : hours * (priority.weight / totalWeight)
   }));
 
-  const result = { ...bucket, percentage, hours, interests, allocations };
+  const result = { ...category, percentage, hours, priorities, allocations };
   return {
     ...result,
-    status: buildBucketStatus(result, percentageTotal)
+    status: buildCategoryStatus(result, percentageTotal)
   };
 }
 
 export function buildSummaryText(allocations, previousAllocations, percentageTotal) {
   if (percentageTotal !== 100) {
-    return 'Bring the bucket split to 100% to unlock the weekly narrative summary.';
+    return 'Bring the category split to 100% to unlock the weekly summary.';
   }
 
   if (!allocations.length) {
-    return 'Add an interest to see how your weekly time is distributed.';
+    return 'Add a priority to see how your weekly time is distributed.';
   }
 
   if (!previousAllocations.size) {
@@ -140,7 +140,7 @@ export function buildSummaryText(allocations, previousAllocations, percentageTot
 
 export function buildPercentageMessage(percentageTotal) {
   if (percentageTotal === 100) {
-    return 'All three buckets total 100%.';
+    return 'Your category portfolio totals 100%.';
   }
 
   const difference = Math.abs(100 - percentageTotal);
@@ -148,17 +148,17 @@ export function buildPercentageMessage(percentageTotal) {
   return `${direction} ${formatNumber(difference)}% to reach 100%. Current total: ${formatNumber(percentageTotal)}%.`;
 }
 
-export function derivePlannerModel(plannerState, uiState, draftInterest = null) {
+export function derivePlannerModel(plannerState, uiState, draftPriority = null) {
   const { percentageTotal, isPercentageValid } = validatePlannerState(plannerState);
-  const bucketAllocations = BUCKETS.map((bucket) => buildBucketAllocation(plannerState, bucket, percentageTotal));
-  const allocations = bucketAllocations.flatMap((bucket) => bucket.allocations);
+  const categoryAllocations = CATEGORIES.map((category) => buildCategoryAllocation(plannerState, category, percentageTotal));
+  const allocations = categoryAllocations.flatMap((category) => category.allocations);
   return {
     percentageTotal,
     isPercentageValid,
-    bucketAllocations,
+    categoryAllocations,
     allocations,
     percentageMessage: buildPercentageMessage(percentageTotal),
     summaryText: buildSummaryText(allocations, uiState.previousAllocations, percentageTotal),
-    preview: getInterestPreview(plannerState, draftInterest)
+    preview: getPriorityPreview(plannerState, draftPriority)
   };
 }

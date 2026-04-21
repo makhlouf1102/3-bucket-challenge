@@ -1,32 +1,32 @@
-import { STORAGE_KEY, BUCKETS } from '../lib/config.js';
-import { parseBucketPercentage, parseNonNegativeNumber, parsePositiveNumber } from '../lib/parsing.js';
+import { LEGACY_STORAGE_KEY, STORAGE_KEY, CATEGORIES } from '../lib/config.js';
+import { parseCategoryPercentage, parseNonNegativeNumber, parsePositiveNumber } from '../lib/parsing.js';
 import { createId } from '../lib/ids.js';
 
 export function createDefaultPlannerState() {
   return {
     freeHours: 0,
-    bucketPercentages: { '1': 80, '2': 15, '3': 5 },
-    interests: []
+    categoryPercentages: { '1': 80, '2': 15, '3': 5 },
+    priorities: []
   };
 }
 
-export function sanitizeInterest(interest) {
-  if (!interest || typeof interest.name !== 'string') {
+export function sanitizePriority(priority) {
+  if (!priority || typeof priority.name !== 'string') {
     return null;
   }
 
-  const trimmedName = interest.name.trim();
-  const bucket = String(interest.bucket);
-  const weight = parsePositiveNumber(interest.weight, null);
+  const trimmedName = priority.name.trim();
+  const category = String(priority.category ?? priority.bucket);
+  const weight = parsePositiveNumber(priority.weight, null);
 
-  if (!trimmedName || !BUCKETS.some((item) => item.id === bucket) || weight === null) {
+  if (!trimmedName || !CATEGORIES.some((item) => item.id === category) || weight === null) {
     return null;
   }
 
   return {
-    id: typeof interest.id === 'string' && interest.id ? interest.id : createId(),
+    id: typeof priority.id === 'string' && priority.id ? priority.id : createId(),
     name: trimmedName,
-    bucket,
+    category,
     weight
   };
 }
@@ -34,22 +34,24 @@ export function sanitizeInterest(interest) {
 export function sanitizePlannerState(raw) {
   const defaults = createDefaultPlannerState();
   const parsed = raw && typeof raw === 'object' ? raw : {};
+  const rawCategoryPercentages = parsed.categoryPercentages ?? parsed.bucketPercentages ?? {};
+  const rawPriorities = parsed.priorities ?? parsed.interests ?? [];
   return {
     freeHours: parseNonNegativeNumber(parsed.freeHours, defaults.freeHours),
-    bucketPercentages: {
-      '1': parseBucketPercentage(parsed.bucketPercentages?.['1'], defaults.bucketPercentages['1']),
-      '2': parseBucketPercentage(parsed.bucketPercentages?.['2'], defaults.bucketPercentages['2']),
-      '3': parseBucketPercentage(parsed.bucketPercentages?.['3'], defaults.bucketPercentages['3'])
+    categoryPercentages: {
+      '1': parseCategoryPercentage(rawCategoryPercentages?.['1'], defaults.categoryPercentages['1']),
+      '2': parseCategoryPercentage(rawCategoryPercentages?.['2'], defaults.categoryPercentages['2']),
+      '3': parseCategoryPercentage(rawCategoryPercentages?.['3'], defaults.categoryPercentages['3'])
     },
-    interests: Array.isArray(parsed.interests)
-      ? parsed.interests.map((interest) => sanitizeInterest(interest)).filter(Boolean)
+    priorities: Array.isArray(rawPriorities)
+      ? rawPriorities.map((priority) => sanitizePriority(priority)).filter(Boolean)
       : []
   };
 }
 
 export function loadPlannerState(storage = window.localStorage) {
   try {
-    const raw = storage.getItem(STORAGE_KEY);
+    const raw = storage.getItem(STORAGE_KEY) ?? storage.getItem(LEGACY_STORAGE_KEY);
     if (!raw) {
       return createDefaultPlannerState();
     }
@@ -66,4 +68,5 @@ export function savePlannerState(state, storage = window.localStorage) {
 
 export function clearPlannerState(storage = window.localStorage) {
   storage.removeItem(STORAGE_KEY);
+  storage.removeItem(LEGACY_STORAGE_KEY);
 }

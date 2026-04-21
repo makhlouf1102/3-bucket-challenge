@@ -1,15 +1,15 @@
-import { parseBucketPercentage, parseNonNegativeNumber, parsePositiveNumber } from '../lib/parsing.js';
+import { parseCategoryPercentage, parseNonNegativeNumber, parsePositiveNumber } from '../lib/parsing.js';
 import { createId } from '../lib/ids.js';
 
 export const ACTIONS = {
   SET_FREE_HOURS: 'setFreeHours',
-  SET_BUCKET_PERCENTAGE: 'setBucketPercentage',
-  SAVE_INTEREST: 'saveInterest',
-  EDIT_INTEREST: 'editInterest',
+  SET_CATEGORY_PERCENTAGE: 'setCategoryPercentage',
+  SAVE_PRIORITY: 'savePriority',
+  EDIT_PRIORITY: 'editPriority',
   CANCEL_EDIT: 'cancelEdit',
-  DELETE_INTEREST: 'deleteInterest',
+  DELETE_PRIORITY: 'deletePriority',
   RESET_PLANNER: 'resetPlanner',
-  TOGGLE_BUCKET_EXPANDED: 'toggleBucketExpanded'
+  TOGGLE_CATEGORY_EXPANDED: 'toggleCategoryExpanded'
 };
 
 export function createPlannerDispatcher({ getState, setState, render, store }) {
@@ -17,8 +17,8 @@ export function createPlannerDispatcher({ getState, setState, render, store }) {
     const current = getState();
     const nextPlannerState = {
       ...current.plannerState,
-      bucketPercentages: { ...current.plannerState.bucketPercentages },
-      interests: [...current.plannerState.interests]
+      categoryPercentages: { ...current.plannerState.categoryPercentages },
+      priorities: [...current.plannerState.priorities]
     };
     const nextUiState = {
       ...current.uiState,
@@ -34,26 +34,26 @@ export function createPlannerDispatcher({ getState, setState, render, store }) {
         nextPlannerState.freeHours = parseNonNegativeNumber(action.payload?.value, current.plannerState.freeHours);
         shouldPersist = true;
         break;
-      case ACTIONS.SET_BUCKET_PERCENTAGE:
-        nextPlannerState.bucketPercentages[action.payload.bucketId] = parseBucketPercentage(
+      case ACTIONS.SET_CATEGORY_PERCENTAGE:
+        nextPlannerState.categoryPercentages[action.payload.categoryId] = parseCategoryPercentage(
           action.payload.value,
-          current.plannerState.bucketPercentages[action.payload.bucketId]
+          current.plannerState.categoryPercentages[action.payload.categoryId]
         );
         shouldPersist = true;
         break;
-      case ACTIONS.SAVE_INTEREST: {
+      case ACTIONS.SAVE_PRIORITY: {
         const name = String(action.payload?.name ?? '').trim();
-        const bucket = String(action.payload?.bucket ?? '');
+        const category = String(action.payload?.category ?? '');
         const weight = parsePositiveNumber(action.payload?.weight, null);
         const existingId = String(action.payload?.id ?? '');
 
         if (!name) {
-          result = { ok: false, message: 'Interest name is required.', isError: true };
+          result = { ok: false, message: 'Enter a priority name.', isError: true };
           break;
         }
 
-        if (!['1', '2', '3'].includes(bucket)) {
-          result = { ok: false, message: 'Select a valid bucket.', isError: true };
+        if (!['1', '2', '3'].includes(category)) {
+          result = { ok: false, message: 'Select a valid category.', isError: true };
           break;
         }
 
@@ -63,61 +63,61 @@ export function createPlannerDispatcher({ getState, setState, render, store }) {
         }
 
         if (existingId) {
-          nextPlannerState.interests = nextPlannerState.interests.map((interest) => (
-            interest.id === existingId ? { ...interest, name, bucket, weight } : interest
+          nextPlannerState.priorities = nextPlannerState.priorities.map((priority) => (
+            priority.id === existingId ? { ...priority, name, category, weight } : priority
           ));
-          nextUiState.lastChangedInterestId = existingId;
-          nextUiState.editingInterestId = '';
+          nextUiState.lastChangedPriorityId = existingId;
+          nextUiState.editingPriorityId = '';
           nextUiState.pendingFocusTarget = 'after-save';
-          result = { ok: true, message: 'Interest updated. Review the allocation preview or add another interest.', isError: false };
+          result = { ok: true, message: 'Priority updated. Review the allocation or add another priority.', isError: false };
         } else {
           const newId = createId();
-          nextPlannerState.interests.push({ id: newId, name, bucket, weight });
-          nextUiState.lastChangedInterestId = newId;
+          nextPlannerState.priorities.push({ id: newId, name, category, weight });
+          nextUiState.lastChangedPriorityId = newId;
           nextUiState.pendingFocusTarget = 'after-save';
-          result = { ok: true, message: 'Interest added. Review the allocation preview or add another interest.', isError: false };
+          result = { ok: true, message: 'Priority added. Review the allocation or add another priority.', isError: false };
         }
 
         shouldPersist = true;
         break;
       }
-      case ACTIONS.EDIT_INTEREST:
-        nextUiState.editingInterestId = String(action.payload?.id ?? '');
-        nextUiState.pendingFocusTarget = 'interest-name';
-        result = { ok: true, message: 'Editing interest. Update the details and keep the flow moving.', isError: false };
+      case ACTIONS.EDIT_PRIORITY:
+        nextUiState.editingPriorityId = String(action.payload?.id ?? '');
+        nextUiState.pendingFocusTarget = 'priority-name';
+        result = { ok: true, message: 'Editing priority. Update the details, then save the change.', isError: false };
         break;
       case ACTIONS.CANCEL_EDIT:
-        nextUiState.editingInterestId = '';
-        nextUiState.pendingFocusTarget = 'interest-name';
+        nextUiState.editingPriorityId = '';
+        nextUiState.pendingFocusTarget = 'priority-name';
         break;
-      case ACTIONS.DELETE_INTEREST: {
-        const interestId = String(action.payload?.id ?? '');
-        nextUiState.lastDeletedInterestId = interestId;
-        nextPlannerState.interests = nextPlannerState.interests.filter((interest) => interest.id !== interestId);
-        if (nextUiState.editingInterestId === interestId) {
-          nextUiState.editingInterestId = '';
+      case ACTIONS.DELETE_PRIORITY: {
+        const priorityId = String(action.payload?.id ?? '');
+        nextUiState.lastDeletedPriorityId = priorityId;
+        nextPlannerState.priorities = nextPlannerState.priorities.filter((priority) => priority.id !== priorityId);
+        if (nextUiState.editingPriorityId === priorityId) {
+          nextUiState.editingPriorityId = '';
         }
         nextUiState.pendingFocusTarget = 'after-delete';
-        result = { ok: true, message: 'Interest deleted. Continue shaping the week.', isError: false };
+        result = { ok: true, message: 'Priority removed. Review the remaining allocation.', isError: false };
         shouldPersist = true;
         break;
       }
       case ACTIONS.RESET_PLANNER:
         nextPlannerState.freeHours = 0;
-        nextPlannerState.bucketPercentages = { '1': 80, '2': 15, '3': 5 };
-        nextPlannerState.interests = [];
-        nextUiState.editingInterestId = '';
-        nextUiState.expandedBucketId = '';
-        nextUiState.lastChangedInterestId = '';
-        nextUiState.lastDeletedInterestId = '';
+        nextPlannerState.categoryPercentages = { '1': 80, '2': 15, '3': 5 };
+        nextPlannerState.priorities = [];
+        nextUiState.editingPriorityId = '';
+        nextUiState.expandedCategoryId = '';
+        nextUiState.lastChangedPriorityId = '';
+        nextUiState.lastDeletedPriorityId = '';
         nextUiState.summaryText = '';
         nextUiState.pendingFocusTarget = 'free-hours';
         shouldClearPersistence = true;
-        result = { ok: true, message: 'All planner data cleared. Start with free hours again.', isError: false };
+        result = { ok: true, message: 'Planner cleared. Start again with available founder hours.', isError: false };
         break;
-      case ACTIONS.TOGGLE_BUCKET_EXPANDED: {
-        const bucketId = String(action.payload?.bucketId ?? '');
-        nextUiState.expandedBucketId = nextUiState.expandedBucketId === bucketId ? '' : bucketId;
+      case ACTIONS.TOGGLE_CATEGORY_EXPANDED: {
+        const categoryId = String(action.payload?.categoryId ?? '');
+        nextUiState.expandedCategoryId = nextUiState.expandedCategoryId === categoryId ? '' : categoryId;
         break;
       }
       default:

@@ -3,15 +3,15 @@ import { derivePlannerModel } from './domain/index.js';
 import { ACTIONS, createPlannerDispatcher } from './actions/index.js';
 import {
   bindAppElements,
-  buildDraftInterest,
+  buildDraftPriority,
   buildJourneyStatus,
   createDefaultUiState,
-  populateInterestForm,
-  renderInterestForm,
-  renderInterestTable,
+  populatePriorityForm,
+  renderPriorityForm,
+  renderPriorityTable,
   renderResults,
   renderSetup,
-  resetInterestForm,
+  resetPriorityForm,
   setMessage
 } from './ui/index.js';
 
@@ -38,13 +38,13 @@ initialize();
 
 function initialize() {
   bindEvents();
-  resetInterestForm(elements.interestForm);
+  resetPriorityForm(elements.priorityForm);
   render();
 }
 
 function render() {
-  const draftInterest = buildDraftInterest(elements.interestForm);
-  const model = derivePlannerModel(appState.plannerState, appState.uiState, draftInterest);
+  const draftPriority = buildDraftPriority(elements.priorityForm);
+  const model = derivePlannerModel(appState.plannerState, appState.uiState, draftPriority);
   const journeyStatus = buildJourneyStatus({
     plannerState: appState.plannerState,
     model,
@@ -59,8 +59,8 @@ function render() {
     uiState: appState.uiState
   });
 
-  renderInterestForm({
-    elements: elements.interestForm,
+  renderPriorityForm({
+    elements: elements.priorityForm,
     plannerState: appState.plannerState,
     model,
     uiState: appState.uiState,
@@ -68,8 +68,8 @@ function render() {
     messageIsError: appState.formMessageIsError
   });
 
-  renderInterestTable({
-    elements: elements.interestTable,
+  renderPriorityTable({
+    elements: elements.priorityTable,
     plannerState: appState.plannerState,
     uiState: appState.uiState
   });
@@ -83,8 +83,8 @@ function render() {
 
   applyPendingFocus(appState.uiState, model);
   appState.uiState.previousAllocations = new Map(model.allocations.map((item) => [item.id, item.hours]));
-  appState.uiState.lastChangedInterestId = '';
-  appState.uiState.lastDeletedInterestId = '';
+  appState.uiState.lastChangedPriorityId = '';
+  appState.uiState.lastDeletedPriorityId = '';
 }
 
 function resolveFocusTarget(target, plannerState, model) {
@@ -93,11 +93,11 @@ function resolveFocusTarget(target, plannerState, model) {
       if (plannerState.freeHours > 0 && model.isPercentageValid && model.allocations.length > 0) {
         return 'allocation-summary';
       }
-      return 'interest-name';
+      return 'priority-name';
     case 'after-delete':
-      return plannerState.interests.length > 0 ? 'interest-name' : 'free-hours';
-    case 'interest-name':
-      return 'interest-name';
+      return plannerState.priorities.length > 0 ? 'priority-name' : 'free-hours';
+    case 'priority-name':
+      return 'priority-name';
     case 'free-hours':
       return 'free-hours';
     default:
@@ -120,7 +120,7 @@ function applyPendingFocus(uiState, model) {
   const targetMap = {
     'allocation-summary': elements.results.allocationSummary,
     'free-hours': elements.setup.freeHours,
-    'interest-name': elements.interestForm.interestName
+    'priority-name': elements.priorityForm.priorityName
   };
 
   const element = targetMap[target];
@@ -139,65 +139,65 @@ function bindEvents() {
     });
   });
 
-  Object.entries(elements.setup.bucketInputs).forEach(([bucketId, input]) => {
+  Object.entries(elements.setup.categoryInputs).forEach(([categoryId, input]) => {
     input.addEventListener('input', () => {
       dispatch({
-        type: ACTIONS.SET_BUCKET_PERCENTAGE,
-        payload: { bucketId, value: input.value }
+        type: ACTIONS.SET_CATEGORY_PERCENTAGE,
+        payload: { categoryId, value: input.value }
       });
     });
   });
 
-  Object.entries(elements.setup.bucketRanges).forEach(([bucketId, input]) => {
+  Object.entries(elements.setup.categoryRanges).forEach(([categoryId, input]) => {
     input.addEventListener('input', () => {
       dispatch({
-        type: ACTIONS.SET_BUCKET_PERCENTAGE,
-        payload: { bucketId, value: input.value }
+        type: ACTIONS.SET_CATEGORY_PERCENTAGE,
+        payload: { categoryId, value: input.value }
       });
     });
   });
 
   [
-    elements.interestForm.interestName,
-    elements.interestForm.interestBucket,
-    elements.interestForm.interestWeight
+    elements.priorityForm.priorityName,
+    elements.priorityForm.priorityCategory,
+    elements.priorityForm.priorityWeight
   ].forEach((element) => {
     element.addEventListener('input', render);
     element.addEventListener('change', render);
   });
 
-  elements.interestForm.interestForm.addEventListener('submit', (event) => {
+  elements.priorityForm.priorityForm.addEventListener('submit', (event) => {
     event.preventDefault();
     const result = dispatch({
-      type: ACTIONS.SAVE_INTEREST,
+      type: ACTIONS.SAVE_PRIORITY,
       payload: {
-        id: elements.interestForm.interestId.value,
-        name: elements.interestForm.interestName.value,
-        bucket: elements.interestForm.interestBucket.value,
-        weight: elements.interestForm.interestWeight.value
+        id: elements.priorityForm.priorityId.value,
+        name: elements.priorityForm.priorityName.value,
+        category: elements.priorityForm.priorityCategory.value,
+        weight: elements.priorityForm.priorityWeight.value
       }
     });
 
     appState.formMessage = result.message || '';
     appState.formMessageIsError = Boolean(result.isError);
     if (result.ok) {
-      resetInterestForm(elements.interestForm);
+      resetPriorityForm(elements.priorityForm);
       render();
     } else {
-      setMessage(elements.interestForm.interestMessage, appState.formMessage, true, appState.uiState.reducedMotion);
+      setMessage(elements.priorityForm.priorityMessage, appState.formMessage, true, appState.uiState.reducedMotion);
     }
   });
 
-  elements.interestForm.cancelEdit.addEventListener('click', () => {
+  elements.priorityForm.cancelEdit.addEventListener('click', () => {
     dispatch({ type: ACTIONS.CANCEL_EDIT });
-    resetInterestForm(elements.interestForm);
+    resetPriorityForm(elements.priorityForm);
     appState.formMessage = '';
     appState.formMessageIsError = false;
     render();
   });
 
-  elements.interestForm.resetButton.addEventListener('click', () => {
-    const confirmed = window.confirm('Clear all saved data for the three-bucket planner?');
+  elements.priorityForm.resetButton.addEventListener('click', () => {
+    const confirmed = window.confirm('Clear all saved data for this weekly planner?');
     if (!confirmed) {
       return;
     }
@@ -205,58 +205,58 @@ function bindEvents() {
     const result = dispatch({ type: ACTIONS.RESET_PLANNER });
     appState.formMessage = result.message || '';
     appState.formMessageIsError = Boolean(result.isError);
-    resetInterestForm(elements.interestForm);
+    resetPriorityForm(elements.priorityForm);
     render();
   });
 
-  elements.interestTable.interestList.addEventListener('click', (event) => {
+  elements.priorityTable.priorityList.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-action]');
     if (!button) {
       return;
     }
 
-    const interestId = button.dataset.id;
+    const priorityId = button.dataset.id;
     const action = button.dataset.action;
 
     if (action === 'edit') {
-      const interest = appState.plannerState.interests.find((item) => item.id === interestId);
-      if (!interest) {
+      const priority = appState.plannerState.priorities.find((item) => item.id === priorityId);
+      if (!priority) {
         return;
       }
 
       const result = dispatch({
-        type: ACTIONS.EDIT_INTEREST,
-        payload: { id: interestId }
+        type: ACTIONS.EDIT_PRIORITY,
+        payload: { id: priorityId }
       });
       appState.formMessage = result.message || '';
       appState.formMessageIsError = Boolean(result.isError);
-      populateInterestForm(elements.interestForm, interest, appState.uiState.reducedMotion);
+      populatePriorityForm(elements.priorityForm, priority, appState.uiState.reducedMotion);
       render();
     }
 
     if (action === 'delete') {
       const result = dispatch({
-        type: ACTIONS.DELETE_INTEREST,
-        payload: { id: interestId }
+        type: ACTIONS.DELETE_PRIORITY,
+        payload: { id: priorityId }
       });
       appState.formMessage = result.message || '';
       appState.formMessageIsError = Boolean(result.isError);
-      if (elements.interestForm.interestId.value === interestId) {
-        resetInterestForm(elements.interestForm);
+      if (elements.priorityForm.priorityId.value === priorityId) {
+        resetPriorityForm(elements.priorityForm);
       }
       render();
     }
   });
 
-  elements.results.bucketResults.addEventListener('click', (event) => {
-    const toggle = event.target.closest('button[data-bucket-toggle]');
+  elements.results.categoryResults.addEventListener('click', (event) => {
+    const toggle = event.target.closest('button[data-category-toggle]');
     if (!toggle) {
       return;
     }
 
     dispatch({
-      type: ACTIONS.TOGGLE_BUCKET_EXPANDED,
-      payload: { bucketId: toggle.dataset.bucketToggle }
+      type: ACTIONS.TOGGLE_CATEGORY_EXPANDED,
+      payload: { categoryId: toggle.dataset.categoryToggle }
     });
   });
 }
