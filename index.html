@@ -22,7 +22,7 @@
         <p id="journey-status-label" class="journey-label">Step 1 of 3</p>
         <h2 id="journey-title">Set the operating week.</h2>
         <p id="journey-status-detail" class="journey-detail">Enter the hours you can deliberately allocate this week.</p>
-        <div class="journey-progress" aria-live="polite">
+        <div class="journey-progress sr-only" aria-live="polite">
           <div class="journey-progress-head">
             <strong>Progress</strong>
             <span id="journey-progress-value">1/3</span>
@@ -31,27 +31,33 @@
             <div id="journey-progress-bar" class="journey-progress-bar"></div>
           </div>
         </div>
-        <ol class="journey-steps" aria-label="Planning steps">
+        <ol id="journey-steps" class="journey-steps" aria-label="Planning steps">
           <li id="step-setup" class="journey-step is-current">
-            <span class="journey-step-index">01</span>
-            <div>
-              <strong>Set capacity</strong>
-              <p>Choose available hours and balance the three categories.</p>
-            </div>
+            <button type="button" class="journey-step-button" data-journey-step="setup">
+              <span class="journey-step-index">1</span>
+              <span>
+                <strong>Set capacity</strong>
+                <span class="journey-step-copy">Choose available hours and balance the three categories.</span>
+              </span>
+            </button>
           </li>
           <li id="step-priorities" class="journey-step">
-            <span class="journey-step-index">02</span>
-            <div>
-              <strong>Name priorities</strong>
-              <p>Add the commitments competing for your attention.</p>
-            </div>
+            <button type="button" class="journey-step-button" data-journey-step="priorities" disabled>
+              <span class="journey-step-index">2</span>
+              <span>
+                <strong>Name priorities</strong>
+                <span class="journey-step-copy">Add the commitments competing for your attention.</span>
+              </span>
+            </button>
           </li>
           <li id="step-results" class="journey-step">
-            <span class="journey-step-index">03</span>
-            <div>
-              <strong>Review the plan</strong>
-              <p>Inspect the allocation and adjust with intent.</p>
-            </div>
+            <button type="button" class="journey-step-button" data-journey-step="results" disabled>
+              <span class="journey-step-index">3</span>
+              <span>
+                <strong>Review the plan</strong>
+                <span class="journey-step-copy">Inspect the allocation and adjust with intent.</span>
+              </span>
+            </button>
           </li>
         </ol>
         <p id="journey-status-tip" class="journey-tip">Tip: use the week you can actually run, not the week you wish you had.</p>
@@ -117,6 +123,10 @@
         </div>
         <p id="percentage-message" class="message" aria-live="polite"></p>
       </div>
+      <nav class="step-footer" aria-label="Step navigation">
+        <p class="step-footer-note" data-step-nav-note="setup">Enter your hours and keep the category total at 100% to continue.</p>
+        <button type="button" class="button" data-step-nav="priorities">Continue to priorities</button>
+      </nav>
     </section>
 
     <section id="priorities-panel" class="panel step-panel" aria-labelledby="priorities-heading">
@@ -179,6 +189,11 @@
           </tbody>
         </table>
       </div>
+      <nav class="step-footer" aria-label="Step navigation">
+        <button type="button" class="button button-ghost" data-step-nav="setup">Back to capacity</button>
+        <p class="step-footer-note" data-step-nav-note="priorities">Save at least one priority to review the weekly allocation.</p>
+        <button type="button" class="button" data-step-nav="results">Review allocation</button>
+      </nav>
     </section>
 
     <section id="results-panel" class="panel panel-results step-panel" aria-labelledby="results-heading">
@@ -208,6 +223,9 @@
           </tbody>
         </table>
       </div>
+      <nav class="step-footer" aria-label="Step navigation">
+        <button type="button" class="button button-ghost" data-step-nav="priorities">Back to priorities</button>
+      </nav>
     </section>
   </main>
 

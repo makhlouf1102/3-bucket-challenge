@@ -15,9 +15,11 @@ function bindJourneyElements(root = document) {
     progressValue: requireElement(root, 'journey-progress-value'),
     progressBar: requireElement(root, 'journey-progress-bar'),
     tip: requireElement(root, 'journey-status-tip'),
+    stepsList: requireElement(root, 'journey-steps'),
     stepSetup: requireElement(root, 'step-setup'),
     stepPriorities: requireElement(root, 'step-priorities'),
-    stepResults: requireElement(root, 'step-results')
+    stepResults: requireElement(root, 'step-results'),
+    stepButtons: Array.from(root.querySelectorAll('[data-journey-step]'))
   };
 }
 
@@ -76,6 +78,13 @@ export function bindAppElements(root = document) {
     setup: bindSetupElements(root),
     priorityForm: bindPriorityFormElements(root),
     priorityTable: bindPriorityTableElements(root),
-    results: bindResultsElements(root)
+    results: bindResultsElements(root),
+    stepPanels: {
+      setup: requireElement(root, 'setup-panel'),
+      priorities: requireElement(root, 'priorities-panel'),
+      results: requireElement(root, 'results-panel')
+    },
+    stepNavButtons: Array.from(root.querySelectorAll('[data-step-nav]')),
+    stepNavNotes: Array.from(root.querySelectorAll('[data-step-nav-note]'))
   };
 }

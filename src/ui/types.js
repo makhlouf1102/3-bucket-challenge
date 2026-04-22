@@ -4,6 +4,8 @@
  * @property {string} expandedCategoryId
  * @property {string} lastChangedPriorityId
  * @property {string} lastDeletedPriorityId
+ * @property {'setup' | 'priorities' | 'results'} selectedJourneyStage
+ * @property {boolean} hasManualJourneySelection
  * @property {'setup' | 'priorities' | 'results'} journeyStage
  * @property {string} pendingFocusTarget
  * @property {Map<string, number>} previousAllocations
@@ -24,6 +26,8 @@ export function createDefaultUiState() {
     expandedCategoryId: '',
     lastChangedPriorityId: '',
     lastDeletedPriorityId: '',
+    selectedJourneyStage: 'setup',
+    hasManualJourneySelection: false,
     journeyStage: 'setup',
     pendingFocusTarget: '',
     previousAllocations: new Map(),

@@ -21,6 +21,8 @@ const JOURNEY_COPY = {
   }
 };
 
+const JOURNEY_ORDER = ['setup', 'priorities', 'results'];
+
 function getJourneyStage(plannerState, model, uiState) {
   if (plannerState.freeHours <= 0 || !model.isPercentageValid) {
     return 'setup';
@@ -31,6 +33,28 @@ function getJourneyStage(plannerState, model, uiState) {
   }
 
   return 'results';
+}
+
+export function getUnlockedJourneyStages(plannerState, model) {
+  const hasSetup = plannerState.freeHours > 0 && model.isPercentageValid;
+  const hasPriorities = hasSetup && plannerState.priorities.length > 0;
+
+  return {
+    setup: true,
+    priorities: hasSetup,
+    results: hasPriorities
+  };
+}
+
+export function resolveSelectedJourneyStage({ plannerState, model, uiState, recommendedStage }) {
+  const unlockedStages = getUnlockedJourneyStages(plannerState, model);
+  const selectedStage = uiState.selectedJourneyStage || recommendedStage;
+
+  if (uiState.hasManualJourneySelection && unlockedStages[selectedStage]) {
+    return selectedStage;
+  }
+
+  return recommendedStage;
 }
 
 function getStageProgress(stage) {
@@ -62,42 +86,127 @@ export function buildJourneyStatus({ plannerState, model, uiState }) {
   };
 }
 
-function updateJourneySteps(elements, stage) {
+function updateJourneySteps(elements, activeStage, unlockedStages) {
   const orderedSteps = [
     { element: elements.stepSetup, id: 'setup' },
     { element: elements.stepPriorities, id: 'priorities' },
     { element: elements.stepResults, id: 'results' }
   ];
+  const activeIndex = JOURNEY_ORDER.indexOf(activeStage);
+  elements.stepsList.dataset.progressStage = activeStage;
 
   orderedSteps.forEach((step, index) => {
-    const isCurrent = step.id === stage;
-    const isComplete = (stage === 'priorities' && index === 0) || (stage === 'results' && index < 2);
+    const isCurrent = step.id === activeStage;
+    const isComplete = index < activeIndex;
+    const isLocked = !unlockedStages[step.id];
     step.element.classList.toggle('is-current', isCurrent);
     step.element.classList.toggle('is-complete', isComplete);
-    step.element.classList.toggle('is-next', !isCurrent && !isComplete);
+    step.element.classList.toggle('is-next', !isCurrent && !isComplete && !isLocked);
+    step.element.classList.toggle('is-locked', isLocked);
     if (isCurrent) {
       step.element.setAttribute('aria-current', 'step');
     } else {
       step.element.removeAttribute('aria-current');
     }
   });
+
+  elements.stepButtons.forEach((button) => {
+    const step = button.dataset.journeyStep;
+    const isUnlocked = Boolean(unlockedStages[step]);
+    button.disabled = !isUnlocked;
+    button.setAttribute('aria-disabled', String(!isUnlocked));
+  });
 }
 
 export function renderJourneyStatus({ elements, plannerState, model, uiState }) {
   const status = buildJourneyStatus({ plannerState, model, uiState });
+  const selectedStage = resolveSelectedJourneyStage({
+    plannerState,
+    model,
+    uiState,
+    recommendedStage: status.stage
+  });
+  const unlockedStages = getUnlockedJourneyStages(plannerState, model);
+  const selectedCopy = JOURNEY_COPY[selectedStage];
+  const selectedLabel = selectedStage === 'setup' ? 'Step 1 of 3' : selectedStage === 'priorities' ? 'Step 2 of 3' : 'Step 3 of 3';
+  const selectedProgressValue = selectedStage === 'setup' ? '1/3' : selectedStage === 'priorities' ? '2/3' : '3/3';
 
-  elements.onboarding.textContent = status.onboarding;
-  elements.statusLabel.textContent = status.label;
-  elements.title.textContent = status.title;
-  elements.detail.textContent = status.detail;
-  elements.progressValue.textContent = status.progressValue;
-  elements.progressBar.style.transform = `scaleX(${status.progressRatio})`;
-  elements.tip.textContent = status.tip;
+  elements.statusLabel.textContent = selectedLabel;
+  elements.title.textContent = selectedCopy.title;
+  elements.detail.textContent = selectedCopy.detail;
+  elements.progressValue.textContent = selectedProgressValue;
+  elements.progressBar.style.transform = `scaleX(${getStageProgress(selectedStage)})`;
+  elements.tip.textContent = selectedCopy.tip;
 
-  updateJourneySteps(elements, status.stage);
+  updateJourneySteps(elements, selectedStage, unlockedStages);
 
   uiState.journeyStage = status.stage;
-  return status;
+  uiState.selectedJourneyStage = selectedStage;
+  return { ...status, selectedStage, unlockedStages };
+}
+
+export function renderStepPanels(stepPanels, activeStage, reducedMotion) {
+  const previousStage = Object.entries(stepPanels).find(([, panel]) => (
+    panel.dataset.activeStepPanel === 'true'
+  ))?.[0];
+  const previousIndex = JOURNEY_ORDER.indexOf(previousStage);
+  const activeIndex = JOURNEY_ORDER.indexOf(activeStage);
+  const direction = previousIndex >= 0 && activeIndex < previousIndex ? 'back' : 'forward';
+
+  Object.entries(stepPanels).forEach(([stage, panel]) => {
+    const isActive = stage === activeStage;
+    const wasActive = panel.dataset.activeStepPanel === 'true';
+    panel.hidden = !isActive;
+    panel.dataset.activeStepPanel = String(isActive);
+
+    if (reducedMotion || !isActive || wasActive) {
+      panel.classList.remove('is-step-entering', 'is-step-forward', 'is-step-back');
+      return;
+    }
+
+    panel.classList.remove('is-step-entering', 'is-step-forward', 'is-step-back');
+    panel.classList.add(direction === 'back' ? 'is-step-back' : 'is-step-forward');
+    window.requestAnimationFrame(() => panel.classList.add('is-step-entering'));
+  });
+}
+
+function getStepNavMessage(stage, plannerState, model) {
+  if (stage === 'setup') {
+    if (plannerState.freeHours <= 0) {
+      return 'Enter your available founder hours to continue.';
+    }
+
+    if (!model.isPercentageValid) {
+      return 'Bring the category total to 100% to continue.';
+    }
+
+    return 'Ready for priorities.';
+  }
+
+  if (stage === 'priorities') {
+    if (plannerState.priorities.length === 0) {
+      return 'Save at least one priority to review the allocation.';
+    }
+
+    return 'Ready to review the weekly allocation.';
+  }
+
+  return 'Use Back to adjust priorities.';
+}
+
+export function renderStepNavigation({ buttons, notes }, plannerState, model) {
+  const unlockedStages = getUnlockedJourneyStages(plannerState, model);
+
+  buttons.forEach((button) => {
+    const targetStage = button.dataset.stepNav;
+    const isUnlocked = Boolean(unlockedStages[targetStage]);
+    button.disabled = !isUnlocked;
+    button.setAttribute('aria-disabled', String(!isUnlocked));
+  });
+
+  notes.forEach((note) => {
+    note.textContent = getStepNavMessage(note.dataset.stepNavNote, plannerState, model);
+  });
 }
 
 export function setMessage(element, text, isError, reducedMotion) {

@@ -4,13 +4,14 @@ import { ACTIONS, createPlannerDispatcher } from './actions/index.js';
 import {
   bindAppElements,
   buildDraftPriority,
-  buildJourneyStatus,
   createDefaultUiState,
   populatePriorityForm,
   renderPriorityForm,
   renderPriorityTable,
   renderResults,
   renderSetup,
+  renderStepNavigation,
+  renderStepPanels,
   resetPriorityForm,
   setMessage
 } from './ui/index.js';
@@ -45,12 +46,6 @@ function initialize() {
 function render() {
   const draftPriority = buildDraftPriority(elements.priorityForm);
   const model = derivePlannerModel(appState.plannerState, appState.uiState, draftPriority);
-  const journeyStatus = buildJourneyStatus({
-    plannerState: appState.plannerState,
-    model,
-    uiState: appState.uiState
-  });
-  appState.uiState.journeyStage = journeyStatus.stage;
 
   renderSetup({
     elements: { ...elements.setup, journey: elements.journey },
@@ -81,6 +76,11 @@ function render() {
     uiState: appState.uiState
   });
 
+  renderStepNavigation({
+    buttons: elements.stepNavButtons,
+    notes: elements.stepNavNotes
+  }, appState.plannerState, model);
+  renderStepPanels(elements.stepPanels, appState.uiState.selectedJourneyStage, appState.uiState.reducedMotion);
   applyPendingFocus(appState.uiState, model);
   appState.uiState.previousAllocations = new Map(model.allocations.map((item) => [item.id, item.hours]));
   appState.uiState.lastChangedPriorityId = '';
@@ -259,4 +259,42 @@ function bindEvents() {
       payload: { categoryId: toggle.dataset.categoryToggle }
     });
   });
+
+  elements.journey.stepButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      if (button.disabled) {
+        return;
+      }
+
+      selectJourneyStage(button.dataset.journeyStep, false);
+    });
+  });
+
+  elements.stepNavButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      if (button.disabled) {
+        return;
+      }
+
+      selectJourneyStage(button.dataset.stepNav, true);
+    });
+  });
+}
+
+function selectJourneyStage(stage, shouldScroll) {
+  appState.uiState.selectedJourneyStage = stage;
+  appState.uiState.hasManualJourneySelection = true;
+  render();
+
+  if (!shouldScroll) {
+    return;
+  }
+
+  const panel = elements.stepPanels[stage];
+  if (!panel) {
+    return;
+  }
+
+  const behavior = appState.uiState.reducedMotion ? 'auto' : 'smooth';
+  panel.scrollIntoView({ behavior, block: 'start' });
 }
